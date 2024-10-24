@@ -21,10 +21,10 @@ def get_user_move():
     w - up, s - down, a - left, d - right
     """
     move_mapping = {
-        "w": (0, -1),  # up
-        "d": (1, 0),  # right
-        "s": (0, 1),  # down
-        "a": (-1, 0),  # left
+        "w": (-1, 0),  # up
+        "d": (0, 1),  # right
+        "s": (1, 0),  # down
+        "a": (0, -1),  # left
     }
 
     while True:
@@ -36,7 +36,7 @@ def get_user_move():
 
 
 if __name__ == "__main__":
-    fh = open(os.path.join("data", "puzzle1-1.txt"))
+    fh = open(os.path.join("data", "puzzle1.txt"))
     fcontent = fh.read()
     fh.close()
 
