@@ -54,6 +54,11 @@ class Sokoban:
     def key_pressed(self, event):
         if self.game_over:
             return
+        
+        if event.keysym == 'r':
+            self.reset_level()
+            return
+        
         action = self.get_action(event.keysym)
         if action:
             self.execute_action(action)
