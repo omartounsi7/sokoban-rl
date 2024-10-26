@@ -19,6 +19,9 @@ class Sokoban:
         self.width = max(len(line) for line in self.level)
         self.find_player()
 
+        # added for reward function. reward value is proportional to the number of boxes in the environment
+        self.total_boxes = sum(row.count('$') for row in self.level)
+
     def reset_level(self):
         self.level = [row.copy() for row in self.initial_level]
         self.find_player()
@@ -58,7 +61,7 @@ class Sokoban:
         if event.keysym == 'r':
             self.reset_level()
             return
-        
+
         action = self.get_action(event.keysym)
         if action:
             self.execute_action(action)
@@ -110,6 +113,17 @@ class Sokoban:
     def is_box(self, x, y):
         return self.level[y][x] in ['$','x']
 
+    # check if the position is our goal
+    def is_goal(self, x, y):
+        return self.level[y][x] == '.'
+    
+    # Check if the position (x, y) is surrounded by walls in two orthogonal directions
+    def is_corner(self, x, y):
+        return (self.is_wall(x - 1, y) and self.is_wall(x, y - 1)) or \
+               (self.is_wall(x + 1, y) and self.is_wall(x, y - 1)) or \
+               (self.is_wall(x - 1, y) and self.is_wall(x, y + 1)) or \
+               (self.is_wall(x + 1, y) and self.is_wall(x, y + 1))
+    
     def move_box(self, x, y, dx, dy):
         nx, ny = x + dx, y + dy
         if self.level[ny][nx] in [' ', '.']:
@@ -163,3 +177,50 @@ class Sokoban:
         self.game_over = True
         self.message_label.config(text="You won!")
         return True
+    
+    # RL Part
+    # function for checking if the box is on goal
+    def is_box_on_goal(self, action):
+        dx, dy = action
+        x, y = self.player_pos
+        nx, ny = x + dx, y + dy
+
+        # Check if the action pushes a box to a goal position
+        if self.is_box(nx, ny):
+            box_next_x, box_next_y = nx + dx, ny + dy
+            return self.is_goal(box_next_x, box_next_y)
+        
+        return False
+    
+    # function for checking if the box is stuck: box is in corner with 2 sides blocked, and is not a goal
+    def is_box_stuck(self, action):
+        dx, dy = action
+        x, y = self.player_pos
+        nx, ny = x + dx, y + dy
+
+        # Check if the move would cause a box to get stuck
+        if self.is_box(nx, ny):
+            box_next_x, box_next_y = nx + dx, ny + dy
+            return self.is_corner(box_next_x, box_next_y) and not self.is_goal(box_next_x, box_next_y)
+        
+        return False
+
+    # function for computing reward. 
+    # if box is correctly placed, gets a positive k reward
+    # if box is stuck (game over), gets -99
+    # for any other moves, let's say just moving around the map or just pushing a box somewhere, gets 0
+    def compute_reward(self, action):
+        k = self.total_boxes
+        p_for_loss = -99
+        neutral = 0
+
+        if self.is_box_on_goal(action):
+            return k
+        
+        if self.is_box_stuck(action):
+            return p_for_loss
+        
+        return neutral
+    
+
+
