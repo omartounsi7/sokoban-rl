@@ -1,14 +1,19 @@
 import tkinter as tk
+import time
 
 class Sokoban:
-    def __init__(self, master, level_file):
+    def __init__(self, master, level_file, policy=None):
         self.master = master
         self.master.title("Sokoban")
         self.level_file = level_file
+        self.policy = policy
         self.load_level()
         self.create_widgets()
         self.bind_keys()
         self.game_over = False
+
+        if self.policy:
+            self.auto_play()
 
     def load_level(self):
         with open(self.level_file, 'r') as file:
@@ -26,6 +31,9 @@ class Sokoban:
         self.game_over = False
         self.message_label.config(text="")
         self.draw_game()
+
+        if self.policy:
+            self.auto_play()
 
     def find_player(self):
         for y, row in enumerate(self.level):
@@ -46,12 +54,18 @@ class Sokoban:
         self.draw_game()
 
     def bind_keys(self):
-        self.master.bind("<Key>", self.key_pressed)
+        if self.policy:
+            self.master.bind("<Key>", self.key_pressed_policy)
+        else:
+            self.master.bind("<Key>", self.key_pressed_human)
 
-    def key_pressed(self, event):
+    def key_pressed_policy(self, event):
+        pass  # Ignore key presses when using a policy
+
+    def key_pressed_human(self, event):
         if self.game_over:
             return
-        
+
         if event.keysym == 'r':
             self.reset_level()
             return
@@ -82,7 +96,7 @@ class Sokoban:
     def execute_action(self, action):
         box_placed = False
         box_stuck = False
-        
+
         dx, dy = action
         x, y = self.player_pos
         nx, ny = x + dx, y + dy
@@ -93,7 +107,7 @@ class Sokoban:
         if self.is_box(nx, ny):
             if not self.move_box(nx, ny, dx, dy):
                 return box_placed, box_stuck
-            
+
             bx, by = nx + dx, ny + dy
             if self.is_box_stuck(bx, by):
                 box_stuck = True
@@ -115,7 +129,7 @@ class Sokoban:
         self.player_pos = (nx, ny)
 
         return box_placed, box_stuck
-    
+
     def is_wall(self, x, y):
         return self.level[y][x] == '#'
 
@@ -124,7 +138,7 @@ class Sokoban:
 
     def is_goal(self, x, y):
         return self.level[y][x] == '.'
-    
+
     def move_box(self, x, y, dx, dy):
         nx, ny = x + dx, y + dy
         if self.level[ny][nx] in [' ', '.']:
@@ -170,6 +184,7 @@ class Sokoban:
                     self.canvas.create_oval(x1+5, y1+5, x2-5, y2-5, fill="blue")
                 else:
                     self.canvas.create_rectangle(x1, y1, x2, y2, fill="white")
+        self.canvas.update()
 
     def check_win(self):
         for row in self.level:
@@ -178,9 +193,9 @@ class Sokoban:
         self.game_over = True
         self.message_label.config(text="You won!")
         return True
-    
+
     def is_box_placed(self, x, y):
-        return self.level[y][x] in ['x', '.']
+        return self.level[y][x] in ['x']
 
     def is_box_stuck(self, x, y):
         # If the box is on a goal, it's not stuck
@@ -202,7 +217,7 @@ class Sokoban:
         if x < 0 or x >= len(self.level[0]) or y < 0 or y >= len(self.level):
             return True  # Treat out-of-bounds as walls
         return self.level[y][x] in ['#', '$', 'x']
-    
+
     def count_boxes_on_goals(self):
         count = 0
         for row in self.level:
@@ -215,3 +230,37 @@ class Sokoban:
         if box_placed:
             return 1
         return 0
+
+    def serialize_state(self):
+        return tuple(tuple(row) for row in self.level)
+
+    def auto_play(self):
+        # Automatically plays the game according to the given policy.
+        while not self.game_over:
+            state = self.serialize_state()
+            if state in self.policy:
+                action = self.policy[state]
+                action_vector = self.get_action_from_direction(action)
+                if action_vector is None:
+                    print(f"Invalid action '{action}' in policy for state.")
+                    break
+                time.sleep(1)  # Wait between actions
+                box_placed, box_stuck = self.execute_action(action_vector)
+                print("Was a box placed: " + str(box_placed))
+                print("Was a box stuck: " + str(box_stuck))
+                r = self.compute_reward(box_placed, box_stuck)
+                print("Reward is " + str(r))
+                self.draw_game()
+                self.check_win()
+            else:
+                print("No action found in policy for the current state.")
+                break
+
+    def get_action_from_direction(self, direction):
+        action_mapping = {
+            'up': (0, -1),
+            'down': (0, 1),
+            'left': (-1, 0),
+            'right': (1, 0)
+        }
+        return action_mapping.get(direction.lower(), None)
