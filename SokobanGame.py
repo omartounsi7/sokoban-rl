@@ -18,8 +18,6 @@ class Sokoban:
         self.height = len(self.level)
         self.width = max(len(line) for line in self.level)
         self.find_player()
-
-        # added for reward function. reward value is proportional to the number of boxes in the environment
         self.total_boxes = sum(row.count('$') for row in self.level)
 
     def reset_level(self):
@@ -39,16 +37,12 @@ class Sokoban:
     def create_widgets(self):
         self.title_label = tk.Label(self.master, text="Sokoban", font=("Helvetica", 16))
         self.title_label.pack(pady=10)
-
         self.canvas = tk.Canvas(self.master, width=450, height=450)
         self.canvas.pack()
-
         self.reset_button = tk.Button(self.master, text="Reset", command=self.reset_level)
         self.reset_button.pack(pady=5)
-
         self.message_label = tk.Label(self.master, text="", font=("Helvetica", 14))
         self.message_label.pack(pady=5)
-
         self.draw_game()
 
     def bind_keys(self):
@@ -96,7 +90,7 @@ class Sokoban:
         # Update player's current position
         if self.level[y][x] == '@':
             self.level[y][x] = ' '
-        elif self.level[y][x] == '+':  # Player was on a goal
+        elif self.level[y][x] == '+': 
             self.level[y][x] = '.'
 
         # Update new player's position
@@ -222,5 +216,3 @@ class Sokoban:
         
         return neutral
     
-
-
