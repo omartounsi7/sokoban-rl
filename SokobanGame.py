@@ -1,5 +1,8 @@
 import tkinter as tk
 import time
+import random
+import itertools
+
 
 class Sokoban:
     def __init__(self, master, level_file, policy=None):
@@ -16,14 +19,14 @@ class Sokoban:
             self.auto_play()
 
     def load_level(self):
-        with open(self.level_file, 'r') as file:
+        with open(self.level_file, "r") as file:
             lines = file.readlines()
-        self.level = [list(line.rstrip('\n')) for line in lines]
+        self.level = [list(line.rstrip("\n")) for line in lines]
         self.initial_level = [row.copy() for row in self.level]
         self.height = len(self.level)
         self.width = max(len(line) for line in self.level)
         self.find_player()
-        self.total_boxes = sum(row.count('$') for row in self.level)
+        self.total_boxes = sum(row.count("$") for row in self.level)
 
     def reset_level(self):
         self.level = [row.copy() for row in self.initial_level]
@@ -35,10 +38,68 @@ class Sokoban:
         if self.policy:
             self.auto_play()
 
+    def policy_generator(initial_level):
+        actions = ["up", "down", "left", "right"]
+        policy = {}
+        wall_positions = set()
+        goal_positions = set()
+        box_positions = set()
+        player_position = None
+
+        for y, row in enumerate(initial_level):
+            for x, cell in enumerate(row):
+                if cell == "#":
+                    wall_positions.add((y, x))
+                elif cell == ".":
+                    goal_positions.add((y, x))
+                elif cell == "$":
+                    box_positions.add((y, x))
+                elif cell == "@":
+                    player_position = (y, x)
+
+        non_wall_positions = [
+            (y, x)
+            for y, row in enumerate(initial_level)
+            for x, cell in enumerate(row)
+            if cell != "#"
+        ]
+        # Generate all possible combinations of box positions
+        box_combinations = itertools.combinations(
+            non_wall_positions, len(box_positions)
+        )
+
+        for box_comb in box_combinations:
+            for player_pos in non_wall_positions:
+                if player_pos not in box_comb:
+                    level_state = []
+                    for y, row in enumerate(initial_level):
+                        new_row = []
+                        for x, cell in enumerate(row):
+                            pos = (y, x)
+                            if pos in wall_positions:
+                                new_row.append("#")
+                            elif pos in goal_positions and pos in box_comb:
+                                new_row.append("*")
+                            elif pos in goal_positions and pos == player_pos:
+                                new_row.append("+")
+                            elif pos in goal_positions:
+                                new_row.append(".")
+                            elif pos == player_pos:
+                                new_row.append("@")
+                            elif pos in box_comb:
+                                new_row.append("$")
+                            else:
+                                new_row.append(" ")
+                        level_state.append(tuple(new_row))
+
+                    policy[tuple(level_state)] = random.choice(actions)
+
+        return policy
+
     def find_player(self):
         for y, row in enumerate(self.level):
             for x, char in enumerate(row):
-                if char == '@' or char == '+':
+                if char == "@" or char == "+":
                     self.player_pos = (x, y)
                     return
 
@@ -47,7 +108,9 @@ class Sokoban:
         self.title_label.pack(pady=10)
         self.canvas = tk.Canvas(self.master, width=450, height=450)
         self.canvas.pack()
-        self.reset_button = tk.Button(self.master, text="Reset", command=self.reset_level)
+        self.reset_button = tk.Button(
+            self.master, text="Reset", command=self.reset_level
+        )
         self.reset_button.pack(pady=5)
         self.message_label = tk.Label(self.master, text="", font=("Helvetica", 14))
         self.message_label.pack(pady=5)
@@ -66,7 +129,7 @@ class Sokoban:
         if self.game_over:
             return
 
-        if event.keysym == 'r':
+        if event.keysym == "r":
             self.reset_level()
             return
 
@@ -82,14 +145,14 @@ class Sokoban:
 
     def get_action(self, key):
         key_mapping = {
-            'w': (0, -1),
-            'a': (-1, 0),
-            's': (0, 1),
-            'd': (1, 0),
-            'Up': (0, -1),
-            'Left': (-1, 0),
-            'Down': (0, 1),
-            'Right': (1, 0)
+            "w": (0, -1),
+            "a": (-1, 0),
+            "s": (0, 1),
+            "d": (1, 0),
+            "Up": (0, -1),
+            "Left": (-1, 0),
+            "Down": (0, 1),
+            "Right": (1, 0),
         }
         return key_mapping.get(key, None)
 
@@ -115,44 +178,44 @@ class Sokoban:
                 box_placed = True
 
         # Update player's current position
-        if self.level[y][x] == '@':
-            self.level[y][x] = ' '
-        elif self.level[y][x] == '+':  # Player was on a goal
-            self.level[y][x] = '.'
+        if self.level[y][x] == "@":
+            self.level[y][x] = " "
+        elif self.level[y][x] == "+":  # Player was on a goal
+            self.level[y][x] = "."
 
         # Update new player's position
-        if self.level[ny][nx] == '.':
-            self.level[ny][nx] = '+'
+        if self.level[ny][nx] == ".":
+            self.level[ny][nx] = "+"
         else:
-            self.level[ny][nx] = '@'
+            self.level[ny][nx] = "@"
 
         self.player_pos = (nx, ny)
 
         return box_placed, box_stuck
 
     def is_wall(self, x, y):
-        return self.level[y][x] == '#'
+        return self.level[y][x] == "#"
 
     def is_box(self, x, y):
-        return self.level[y][x] in ['$','x']
+        return self.level[y][x] in ["$", "x"]
 
     def is_goal(self, x, y):
-        return self.level[y][x] == '.'
+        return self.level[y][x] == "."
 
     def move_box(self, x, y, dx, dy):
         nx, ny = x + dx, y + dy
-        if self.level[ny][nx] in [' ', '.']:
+        if self.level[ny][nx] in [" ", "."]:
             # Update box's current position
-            if self.level[y][x] == '$':
-                self.level[y][x] = ' '
-            elif self.level[y][x] == 'x':
-                self.level[y][x] = '.'
+            if self.level[y][x] == "$":
+                self.level[y][x] = " "
+            elif self.level[y][x] == "x":
+                self.level[y][x] = "."
 
             # Update box's new position
-            if self.level[ny][nx] == '.':
-                self.level[ny][nx] = 'x'
+            if self.level[ny][nx] == ".":
+                self.level[ny][nx] = "x"
             else:
-                self.level[ny][nx] = '$'
+                self.level[ny][nx] = "$"
             return True
         return False
 
@@ -166,40 +229,44 @@ class Sokoban:
                 x1 = offset_x + x * size
                 y1 = offset_y + y * size
                 x2, y2 = x1 + size, y1 + size
-                if char == '#':
+                if char == "#":
                     self.canvas.create_rectangle(x1, y1, x2, y2, fill="gray")
-                elif char == '.':
+                elif char == ".":
                     self.canvas.create_rectangle(x1, y1, x2, y2, fill="lightyellow")
-                elif char == '$':
+                elif char == "$":
                     self.canvas.create_rectangle(x1, y1, x2, y2, fill="white")
-                    self.canvas.create_rectangle(x1+10, y1+10, x2-10, y2-10, fill="brown")
-                elif char == 'x':  # Box on goal
+                    self.canvas.create_rectangle(
+                        x1 + 10, y1 + 10, x2 - 10, y2 - 10, fill="brown"
+                    )
+                elif char == "x":  # Box on goal
                     self.canvas.create_rectangle(x1, y1, x2, y2, fill="lightyellow")
-                    self.canvas.create_rectangle(x1+10, y1+10, x2-10, y2-10, fill="green")
-                elif char == '@':
+                    self.canvas.create_rectangle(
+                        x1 + 10, y1 + 10, x2 - 10, y2 - 10, fill="green"
+                    )
+                elif char == "@":
                     self.canvas.create_rectangle(x1, y1, x2, y2, fill="white")
-                    self.canvas.create_oval(x1+5, y1+5, x2-5, y2-5, fill="blue")
-                elif char == '+':  # Player on goal
+                    self.canvas.create_oval(x1 + 5, y1 + 5, x2 - 5, y2 - 5, fill="blue")
+                elif char == "+":  # Player on goal
                     self.canvas.create_rectangle(x1, y1, x2, y2, fill="lightyellow")
-                    self.canvas.create_oval(x1+5, y1+5, x2-5, y2-5, fill="blue")
+                    self.canvas.create_oval(x1 + 5, y1 + 5, x2 - 5, y2 - 5, fill="blue")
                 else:
                     self.canvas.create_rectangle(x1, y1, x2, y2, fill="white")
         self.canvas.update()
 
     def check_win(self):
         for row in self.level:
-            if '$' in row:
+            if "$" in row:
                 return False
         self.game_over = True
         self.message_label.config(text="You won!")
         return True
 
     def is_box_placed(self, x, y):
-        return self.level[y][x] in ['x']
+        return self.level[y][x] in ["x"]
 
     def is_box_stuck(self, x, y):
         # If the box is on a goal, it's not stuck
-        if self.level[y][x] in ['x', '.']:
+        if self.level[y][x] in ["x", "."]:
             return False
 
         dirs = [(0, -1), (1, 0), (0, 1), (-1, 0)]
@@ -208,7 +275,9 @@ class Sokoban:
         for i in range(4):
             dx1, dy1 = dirs[i]
             dx2, dy2 = dirs[(i + 1) % 4]
-            if self.is_obstacle(x + dx1, y + dy1) and self.is_obstacle(x + dx2, y + dy2):
+            if self.is_obstacle(x + dx1, y + dy1) and self.is_obstacle(
+                x + dx2, y + dy2
+            ):
                 return True
 
         return False
@@ -216,12 +285,12 @@ class Sokoban:
     def is_obstacle(self, x, y):
         if x < 0 or x >= len(self.level[0]) or y < 0 or y >= len(self.level):
             return True  # Treat out-of-bounds as walls
-        return self.level[y][x] in ['#', '$', 'x']
+        return self.level[y][x] in ["#", "$", "x"]
 
     def count_boxes_on_goals(self):
         count = 0
         for row in self.level:
-            count += row.count('x')  # 'x' represents a box on a goal
+            count += row.count("x")  # 'x' represents a box on a goal
         return count
 
     def compute_reward(self, box_placed, box_stuck):
@@ -258,9 +327,9 @@ class Sokoban:
 
     def get_action_from_direction(self, direction):
         action_mapping = {
-            'up': (0, -1),
-            'down': (0, 1),
-            'left': (-1, 0),
-            'right': (1, 0)
+            "up": (0, -1),
+            "down": (0, 1),
+            "left": (-1, 0),
+            "right": (1, 0),
         }
         return action_mapping.get(direction.lower(), None)
