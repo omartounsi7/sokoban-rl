@@ -1,6 +1,5 @@
 import tkinter as tk
 import time
-import random
 import itertools
 
 
@@ -14,15 +13,13 @@ class Sokoban:
         self.create_widgets()
         self.bind_keys()
         self.game_over = False
+        self.generate_state_space()
 
-        self.policy = self.policy_generator(self.initial_level)
-
-        # for k in policy.keys():
-        #     print("")
-        #     for line in k:
-        #         print(line)
-
-        # print("Length of state space is " + str(len(policy.keys())))
+        for state in self.state_space:
+            for row in state:
+                print(row)
+            print("")
+        print("Length of state space: " + str(len(self.state_space)))
 
         if self.policy:
             self.auto_play()
@@ -47,15 +44,13 @@ class Sokoban:
         if self.policy:
             self.auto_play()
 
-    def policy_generator(self, initial_level):
-        actions = ["up", "down", "left", "right"]
-        policy = {}
+    def generate_state_space(self):
+        state_space = set()
         wall_positions = set()
         goal_positions = set()
         box_positions = set()
-        player_position = None
 
-        for y, row in enumerate(initial_level):
+        for y, row in enumerate(self.initial_level):
             for x, cell in enumerate(row):
                 if cell == "#":
                     wall_positions.add((y, x))
@@ -68,7 +63,7 @@ class Sokoban:
 
         non_wall_positions = [
             (y, x)
-            for y, row in enumerate(initial_level)
+            for y, row in enumerate(self.initial_level)
             for x, cell in enumerate(row)
             if cell != "#"
         ]
@@ -81,14 +76,14 @@ class Sokoban:
             for player_pos in non_wall_positions:
                 if player_pos not in box_comb:
                     level_state = []
-                    for y, row in enumerate(initial_level):
+                    for y, row in enumerate(self.initial_level):
                         new_row = []
                         for x, cell in enumerate(row):
                             pos = (y, x)
                             if pos in wall_positions:
                                 new_row.append("#")
                             elif pos in goal_positions and pos in box_comb:
-                                new_row.append("*")
+                                new_row.append("x")
                             elif pos in goal_positions and pos == player_pos:
                                 new_row.append("+")
                             elif pos in goal_positions:
@@ -101,9 +96,8 @@ class Sokoban:
                                 new_row.append(" ")
                         level_state.append(tuple(new_row))
 
-                    policy[tuple(level_state)] = random.choice(actions)
-
-        return policy
+                    state_space.add(tuple(level_state))
+        self.state_space = state_space
 
     def find_player(self):
         for y, row in enumerate(self.level):
