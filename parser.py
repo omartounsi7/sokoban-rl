@@ -1,9 +1,9 @@
 # This script only converts a combined level files into individual text files
 import os
-
+import sys
 
 def parse_all_levels(input_file):
-    output_dir = "puzzles"
+    output_dir = "puzzles/puzzle_set_" + input_file[-7:-4]
     os.makedirs(output_dir, exist_ok=True)
 
     with open(input_file, "r") as infile:
@@ -23,5 +23,8 @@ def parse_all_levels(input_file):
 
 
 if __name__ == "__main__":
-    input_file = "puzzles/000.txt"
-    parse_all_levels(input_file)
+    if len(sys.argv) != 2:
+        print("Usage: python parser.py puzzles/NNN.txt")
+        sys.exit(1)
+
+    parse_all_levels(sys.argv[1])
