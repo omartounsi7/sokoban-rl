@@ -15,6 +15,15 @@ class Sokoban:
         self.bind_keys()
         self.game_over = False
 
+        self.policy = self.policy_generator(self.initial_level)
+
+        # for k in policy.keys():
+        #     print("")
+        #     for line in k:
+        #         print(line)
+
+        # print("Length of state space is " + str(len(policy.keys())))
+
         if self.policy:
             self.auto_play()
 
@@ -38,7 +47,7 @@ class Sokoban:
         if self.policy:
             self.auto_play()
 
-    def policy_generator(initial_level):
+    def policy_generator(self, initial_level):
         actions = ["up", "down", "left", "right"]
         policy = {}
         wall_positions = set()
