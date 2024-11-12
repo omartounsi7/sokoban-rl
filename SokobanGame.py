@@ -1,7 +1,8 @@
 import tkinter as tk
 import time
 import itertools
-
+import matplotlib.pyplot as plt
+import numpy as np
 
 class Sokoban:
     def __init__(self, master, level_file, policy=None):
@@ -336,3 +337,114 @@ class Sokoban:
             "right": (1, 0),
         }
         return action_mapping.get(direction.lower(), None)
+
+    def value_iteration(self, discount_factor=0.9, threshold=0.01):
+        # Initialize value function for each state in the state space
+        value_function = {state: 0 for state in self.state_space}
+        
+        while True:
+            delta = 0
+            # update each state based on the Bellman equation
+            for state in self.state_space:
+                # we load this state into the game grid
+                self.level = [list(row) for row in state]
+                self.find_player()  # ensure `player_pos` is set based on the current state
+                max_value = float('-inf')
+                
+                # try all possible actions from the current state
+                for action in [(0, -1), (0, 1), (-1, 0), (1, 0)]:  # up down left right
+                    # We simulate the action to check its effects
+                    # simulate_action proceeds with the next move the agents gonna take but does not affect the game. it's to check if the next move is valid
+                    box_placed, box_stuck = self.simulate_action(action)
+                    reward = self.compute_reward(box_placed, box_stuck)
+
+                    # get the serialized next state after the action
+                    next_state = self.serialize_state()
+                    next_value = value_function.get(next_state, 0)
+                    
+                    # apply bellman equation for this action
+                    value = reward + discount_factor * next_value
+                    max_value = max(max_value, value)
+                
+                # calculate delta
+                delta = max(delta, abs(value_function[state] - max_value))
+                value_function[state] = max_value
+            
+            # stop if the value function has converged
+            if delta < threshold:
+                break
+        
+        # use the computed value function to derive the optimal policy
+        self.policy = self.derive_policy(value_function)
+        return value_function
+
+    def simulate_action(self, action):
+
+        # we want to simulate taking an action in the current state without modifying the actual game state.
+        # this function returns box_placed and box_stuck status based on the action's effect.
+        dx, dy = action
+        x, y = self.player_pos
+        nx, ny = x + dx, y + dy
+
+        if self.is_wall(nx, ny):
+            return False, False  # invalid move
+
+        box_placed = False
+        box_stuck = False
+
+        if self.is_box(nx, ny):
+            if not self.move_box(nx, ny, dx, dy):
+                return False, True  # box couldn't move, indicating it's stuck
+
+            bx, by = nx + dx, ny + dy
+            box_stuck = self.is_box_stuck(bx, by)
+            box_placed = self.is_box_placed(bx, by)
+
+        return box_placed, box_stuck
+
+    def derive_policy(self, value_function, discount_factor=0.9):
+        # this function derives the optimal policy based on the computed value function.
+
+        # for each state, choose the action that maximizes the expected value.
+        policy = {}
+        for state in self.state_space:
+            self.level = [list(row) for row in state]
+            self.find_player()
+            best_action = None
+            max_value = float('-inf')
+
+            for action in [(0, -1), (0, 1), (-1, 0), (1, 0)]:  # up down left right
+                # simulate action and compute the reward
+                box_placed, box_stuck = self.simulate_action(action)
+                reward = self.compute_reward(box_placed, box_stuck)
+                
+                next_state = self.serialize_state()
+                next_value = value_function.get(next_state, 0)
+
+                # calculate the value of the action
+                value = reward + discount_factor * next_value
+                if value > max_value:
+                    max_value = value
+                    best_action = action
+
+            # then store the best action for this state in the policy
+            policy[state] = best_action
+
+        return policy
+
+    def plot_value_function(self, value_function):
+        grid_values = np.zeros((self.height, self.width))
+
+        for state, value in value_function.items():
+            self.level = [list(row) for row in state]
+            for y in range(self.height):
+                for x in range(self.width):
+                    if self.level[y][x] == "#":
+                        grid_values[y, x] = np.nan
+                    else:
+                        grid_values[y, x] = value
+
+        plt.imshow(grid_values, cmap="viridis", interpolation="nearest")
+        plt.colorbar(label="Value")
+        plt.title("Optimal Value Function Heatmap")
+        plt.show()
