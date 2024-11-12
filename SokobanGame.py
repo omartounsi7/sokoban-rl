@@ -300,28 +300,6 @@ class Sokoban:
     def serialize_state(self):
         return tuple(tuple(row) for row in self.level)
 
-    def auto_play(self):
-        # Automatically plays the game according to the given policy.
-        while not self.game_over:
-            state = self.serialize_state()
-            if state in self.policy:
-                action = self.policy[state]
-                action_vector = self.get_action_from_direction(action)
-                if action_vector is None:
-                    print(f"Invalid action '{action}' in policy for state.")
-                    break
-                time.sleep(1)  # Wait between actions
-                box_placed, box_stuck = self.execute_action(action_vector)
-                print("Was a box placed: " + str(box_placed))
-                print("Was a box stuck: " + str(box_stuck))
-                r = self.compute_reward(box_placed, box_stuck)
-                print("Reward is " + str(r))
-                self.draw_game()
-                self.check_win()
-            else:
-                print("No action found in policy for the current state.")
-                break
-
     def get_action_from_direction(self, direction):
         action_mapping = {
             "up": (0, -1),
@@ -330,3 +308,315 @@ class Sokoban:
             "right": (1, 0),
         }
         return action_mapping.get(direction.lower(), None)
+
+    def is_terminal(self, state):
+        """
+        Checks if the state is terminal (all boxes on goals).
+        """
+        for row in state:
+            if '$' in row:
+                return False
+        return True
+
+    def get_possible_actions(self, state):
+        """
+        Returns the list of possible actions from the given state.
+        Actions are 'up', 'down', 'left', 'right'.
+        """
+        actions = []
+        player_pos = self.find_player_in_state(state)
+        if not player_pos:
+            return actions
+
+        x, y = player_pos
+        action_mapping = {
+            'up': (0, -1),
+            'down': (0, 1),
+            'left': (-1, 0),
+            'right': (1, 0)
+        }
+
+        for action, (dx, dy) in action_mapping.items():
+            nx, ny = x + dx, y + dy
+            if self.is_position_free(state, nx, ny):
+                actions.append(action)
+            elif self.is_box(state, nx, ny):
+                bx, by = nx + dx, ny + dy
+                if self.is_position_free(state, bx, by):
+                    actions.append(action)
+        return actions
+
+    def find_player_in_state(self, state):
+        """
+        Finds the player's position in a given state.
+        Returns (x, y) or None if not found.
+        """
+        for y, row in enumerate(state):
+            for x, cell in enumerate(row):
+                if cell in ('@', '+'):
+                    return (x, y)
+        return None
+
+    def is_position_free(self, state, x, y):
+        """
+        Checks if a position is free (empty or goal).
+        """
+        if not self.is_within_bounds(x, y, state):
+            return False
+        return state[y][x] in (' ', '.')
+
+    def is_box(self, state, x, y):
+        """
+        Checks if a position has a box.
+        """
+        if not self.is_within_bounds(x, y, state):
+            return False
+        return state[y][x] in ('$', 'x')
+
+    def is_within_bounds(self, x, y, state):
+        """
+        Checks if (x, y) is within the grid bounds.
+        """
+        return 0 <= y < len(state) and 0 <= x < len(state[0])
+
+    def apply_action_to_state(self, state, action):
+        """
+        Applies an action to a given state and returns the new state and reward.
+        """
+        new_state = [list(row) for row in state]  # Deep copy
+        player_pos = self.find_player_in_state(state)
+        if not player_pos:
+            return None, -99  # Invalid state
+
+        x, y = player_pos
+        action_mapping = {
+            'up': (0, -1),
+            'down': (0, 1),
+            'left': (-1, 0),
+            'right': (1, 0)
+        }
+
+        if action not in action_mapping:
+            return None, -99  # Invalid action
+
+        dx, dy = action_mapping[action]
+        nx, ny = x + dx, y + dy
+
+        if not self.is_within_bounds(nx, ny, state):
+            return None, -99  # Move into wall
+
+        target_cell = state[ny][nx]
+
+        if target_cell in (' ', '.'):
+            # Move player
+            if target_cell == '.':
+                new_state[y][x] = '.' if state[y][x] == '+' else ' '
+                new_state[ny][nx] = '+' if state[y][x] == '+' else '@'
+            else:
+                new_state[y][x] = '.' if state[y][x] == '+' else ' '
+                new_state[ny][nx] = '@'
+            return tuple(tuple(row) for row in new_state), 0  # No reward
+        elif target_cell in ('$', 'x'):
+            # Attempt to push the box
+            bx, by = nx + dx, ny + dy
+            if not self.is_within_bounds(bx, by, state):
+                return None, -99  # Box push out of bounds
+            box_target_cell = state[by][bx]
+            if box_target_cell in (' ', '.'):
+                # Move box
+                if box_target_cell == '.':
+                    new_state[by][bx] = 'x'
+                else:
+                    new_state[by][bx] = '$'
+
+                # Update box's old position
+                new_state[ny][nx] = '+' if state[ny][nx] == 'x' else '@'
+
+                # Update player's old position
+                new_state[y][x] = '.' if state[y][x] == '+' else ' '
+
+                # Compute reward
+                reward = 1 if new_state[by][bx] == 'x' else 0
+                return tuple(tuple(row) for row in new_state), reward
+            else:
+                return None, -99  # Box push blocked
+        else:
+            return None, -99  # Invalid target cell
+
+    def first_visit_mc_policy_evaluation(self, num_episodes=1000, discount_factor=0.9):
+        """
+        Performs First Visit Monte Carlo Policy Evaluation to estimate Q(s,a).
+        Updates the policy to be greedy with respect to the estimated Q(s,a).
+        
+        Args:
+            num_episodes (int): Number of episodes to sample.
+            discount_factor (float): Discount factor for future rewards.
+        """
+        # Initialize Q(s,a) and returns_sum, returns_count
+        Q = {}
+        returns_sum = {}
+        returns_count = {}
+        
+        # Initialize policy: random for all states
+        for state in self.state_space:
+            Q[state] = {}
+            returns_sum[state] = {}
+            returns_count[state] = {}
+            possible_actions = self.get_possible_actions(state)
+            for action in possible_actions:
+                Q[state][action] = 0.0
+                returns_sum[state][action] = 0.0
+                returns_count[state][action] = 0
+
+        # Initialize policy: random policy
+        policy = {}
+        for state in self.state_space:
+            possible_actions = self.get_possible_actions(state)
+            if possible_actions:
+                policy[state] = random.choice(possible_actions)
+            else:
+                policy[state] = None  # No possible actions
+
+        for episode in range(num_episodes):
+            # Generate an episode following the current policy
+            episode_states_actions_rewards = []
+            current_state = self.serialize_state()
+            while True:
+                action = policy.get(current_state, None)
+                if action is None:
+                    break  # No possible actions, end episode
+                next_state, reward = self.apply_action_to_state(current_state, action)
+                if next_state is None:
+                    # Invalid move, end episode with penalty
+                    episode_states_actions_rewards.append((current_state, action, -99))
+                    break
+                episode_states_actions_rewards.append((current_state, action, reward))
+                if self.is_terminal(next_state):
+                    break
+                current_state = next_state
+
+            # Calculate returns for the episode
+            G = 0
+            episode_length = len(episode_states_actions_rewards)
+            for t in reversed(range(episode_length)):
+                state, action, reward = episode_states_actions_rewards[t]
+                G = discount_factor * G + reward
+                # Check if this is the first occurrence of (state, action)
+                first_occurrence = True
+                for i in range(t):
+                    if (episode_states_actions_rewards[i][0] == state and 
+                        episode_states_actions_rewards[i][1] == action):
+                        first_occurrence = False
+                        break
+                if first_occurrence:
+                    returns_sum[state][action] += G
+                    returns_count[state][action] += 1
+                    Q[state][action] = returns_sum[state][action] / returns_count[state][action]
+                    # Improve the policy to be greedy
+                    best_action = max(Q[state], key=Q[state].get)
+                    policy[state] = best_action
+
+        # After all episodes, set the policy
+        self.policy = policy
+        print("First Visit MC Policy Evaluation Completed.")
+
+    def every_visit_mc_policy_evaluation(self, num_episodes=1000, discount_factor=0.9):
+        """
+        Performs Every Visit Monte Carlo Policy Evaluation to estimate Q(s,a).
+        Updates the policy to be greedy with respect to the estimated Q(s,a).
+        
+        Args:
+            num_episodes (int): Number of episodes to sample.
+            discount_factor (float): Discount factor for future rewards.
+        """
+        # Initialize Q(s,a) and returns_sum, returns_count
+        Q = {}
+        returns_sum = {}
+        returns_count = {}
+        
+        # Initialize policy: random for all states
+        for state in self.state_space:
+            Q[state] = {}
+            returns_sum[state] = {}
+            returns_count[state] = {}
+            possible_actions = self.get_possible_actions(state)
+            for action in possible_actions:
+                Q[state][action] = 0.0
+                returns_sum[state][action] = 0.0
+                returns_count[state][action] = 0
+
+        # Initialize policy: random policy
+        policy = {}
+        for state in self.state_space:
+            possible_actions = self.get_possible_actions(state)
+            if possible_actions:
+                policy[state] = random.choice(possible_actions)
+            else:
+                policy[state] = None  # No possible actions
+
+        for episode in range(num_episodes):
+            # Generate an episode following the current policy
+            episode_states_actions_rewards = []
+            current_state = self.serialize_state()
+            while True:
+                action = policy.get(current_state, None)
+                if action is None:
+                    break  # No possible actions, end episode
+                next_state, reward = self.apply_action_to_state(current_state, action)
+                if next_state is None:
+                    # Invalid move, end episode with penalty
+                    episode_states_actions_rewards.append((current_state, action, -99))
+                    break
+                episode_states_actions_rewards.append((current_state, action, reward))
+                if self.is_terminal(next_state):
+                    break
+                current_state = next_state
+
+            # Calculate returns for the episode
+            G = 0
+            episode_length = len(episode_states_actions_rewards)
+            for t in reversed(range(episode_length)):
+                state, action, reward = episode_states_actions_rewards[t]
+                G = discount_factor * G + reward
+                returns_sum[state][action] += G
+                returns_count[state][action] += 1
+                Q[state][action] = returns_sum[state][action] / returns_count[state][action]
+                # Improve the policy to be greedy
+                best_action = max(Q[state], key=Q[state].get)
+                policy[state] = best_action
+
+        # After all episodes, set the policy
+        self.policy = policy
+        print("Every Visit MC Policy Evaluation Completed.")
+
+    def first_visit_mc_policy_evaluation_complete(self, num_episodes=1000, discount_factor=0.9):
+        """
+        Wrapper to perform First Visit MC Policy Evaluation and update the policy.
+        """
+        self.first_visit_mc_policy_evaluation(num_episodes, discount_factor)
+
+    def every_visit_mc_policy_evaluation_complete(self, num_episodes=1000, discount_factor=0.9):
+        """
+        Wrapper to perform Every Visit MC Policy Evaluation and update the policy.
+        """
+        self.every_visit_mc_policy_evaluation(num_episodes, discount_factor)
+
+    def auto_play(self):
+        """
+        Automatically plays the game according to the learned policy.
+        """
+        while not self.game_over:
+            state = self.serialize_state()
+            action = self.policy.get(state, None)
+            if action is None:
+                print("No action found in policy for the current state.")
+                break
+            action_vector = self.get_action_from_direction(action)
+            if action_vector is None:
+                print(f"Invalid action '{action}' in policy for state.")
+                break
+            time.sleep(1)  # Wait between actions for visualization
+            box_placed, box_stuck = self.execute_action(action_vector)
+            print(f"Action: {action}, Reward: {self.compute_reward(box_placed, box_stuck)}")
+            self.draw_game()
+            self.check_win()
