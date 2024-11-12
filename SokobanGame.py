@@ -4,22 +4,16 @@ import itertools
 
 
 class Sokoban:
-    def __init__(self, master, level_file, policy=None):
+    def __init__(self, master, level_file):
         self.master = master
         self.master.title("Sokoban")
         self.level_file = level_file
-        self.policy = policy
+        self.policy = None
         self.load_level()
         self.create_widgets()
         self.bind_keys()
         self.game_over = False
         self.generate_state_space()
-
-        for state in self.state_space:
-            for row in state:
-                print(row)
-            print("")
-        print("Length of state space: " + str(len(self.state_space)))
 
         if self.policy:
             self.auto_play()
