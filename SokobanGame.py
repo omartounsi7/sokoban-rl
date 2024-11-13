@@ -15,7 +15,8 @@ class Sokoban:
         self.bind_keys()
         self.game_over = False
         self.generate_state_space()
-
+        self.actions = [(0, -1), (0, 1), (1, 0), (-1, 0)]
+        
         for state in self.state_space:
             for row in state:
                 print(row)
@@ -297,6 +298,7 @@ class Sokoban:
             count += row.count("x")  # 'x' represents a box on a goal
         return count
 
+    # our compute reward function needs to be reimplemented
     def compute_reward(self, box_placed, box_stuck):
         if box_stuck:
             return -99
@@ -304,8 +306,8 @@ class Sokoban:
             return 1
         return 0
 
-    def serialize_state(self):
-        return tuple(tuple(row) for row in self.level)
+    def serialize_state(self, level):
+        return tuple(tuple(row) for row in level)
 
     def auto_play(self):
         # Automatically plays the game according to the given policy.
@@ -338,99 +340,121 @@ class Sokoban:
         }
         return action_mapping.get(direction.lower(), None)
 
-    def value_iteration(self, discount_factor=0.9, threshold=0.01):
-        # Initialize value function for each state in the state space
-        value_function = {state: 0 for state in self.state_space}
-        
-        while True:
-            delta = 0
-            # update each state based on the Bellman equation
-            for state in self.state_space:
-                # we load this state into the game grid
-                self.level = [list(row) for row in state]
-                self.find_player()  # ensure `player_pos` is set based on the current state
-                max_value = float('-inf')
-                
-                # try all possible actions from the current state
-                for action in [(0, -1), (0, 1), (-1, 0), (1, 0)]:  # up down left right
-                    # We simulate the action to check its effects
-                    # simulate_action proceeds with the next move the agents gonna take but does not affect the game. it's to check if the next move is valid
-                    box_placed, box_stuck = self.simulate_action(action)
-                    reward = self.compute_reward(box_placed, box_stuck)
+    def create_P_pi_matrix(self, policy):
+        P = np.zeros((len(self.state_space), len(self.state_space)))
 
-                    # get the serialized next state after the action
-                    next_state = self.serialize_state()
-                    next_value = value_function.get(next_state, 0)
-                    
-                    # apply bellman equation for this action
-                    value = reward + discount_factor * next_value
-                    max_value = max(max_value, value)
-                
-                # calculate delta
-                delta = max(delta, abs(value_function[state] - max_value))
-                value_function[state] = max_value
-            
-            # stop if the value function has converged
-            if delta < threshold:
-                break
-        
-        # use the computed value function to derive the optimal policy
-        self.policy = self.derive_policy(value_function)
-        return value_function
+        state_index = {state: idx for idx, state in enumerate(self.state_space)}
 
-    def simulate_action(self, action):
-
-        # we want to simulate taking an action in the current state without modifying the actual game state.
-        # this function returns box_placed and box_stuck status based on the action's effect.
-        dx, dy = action
-        x, y = self.player_pos
-        nx, ny = x + dx, y + dy
-
-        if self.is_wall(nx, ny):
-            return False, False  # invalid move
-
-        box_placed = False
-        box_stuck = False
-
-        if self.is_box(nx, ny):
-            if not self.move_box(nx, ny, dx, dy):
-                return False, True  # box couldn't move, indicating it's stuck
-
-            bx, by = nx + dx, ny + dy
-            box_stuck = self.is_box_stuck(bx, by)
-            box_placed = self.is_box_placed(bx, by)
-
-        return box_placed, box_stuck
-
-    def derive_policy(self, value_function, discount_factor=0.9):
-        # this function derives the optimal policy based on the computed value function.
-
-        # for each state, choose the action that maximizes the expected value.
-        policy = {}
         for state in self.state_space:
             self.level = [list(row) for row in state]
             self.find_player()
-            best_action = None
-            max_value = float('-inf')
+            s_index = state_index[state]
 
-            for action in [(0, -1), (0, 1), (-1, 0), (1, 0)]:  # up down left right
-                # simulate action and compute the reward
-                box_placed, box_stuck = self.simulate_action(action)
-                reward = self.compute_reward(box_placed, box_stuck)
-                
-                next_state = self.serialize_state()
-                next_value = value_function.get(next_state, 0)
+            action = policy[state]
+            dx, dy = action
 
-                # calculate the value of the action
-                value = reward + discount_factor * next_value
-                if value > max_value:
-                    max_value = value
-                    best_action = action
+            next_state = self.get_next_state(dx, dy)
+            s_next_index = state_index.get(next_state, s_index)
 
-            # then store the best action for this state in the policy
+            P[s_index, s_next_index] = 1.0
+
+        return P
+
+    def create_T_matrix(self):
+        T = np.zeros((len(self.actions), len(self.state_space), len(self.state_space)))
+
+        for action_idx, action in enumerate(self.actions):
+            policy = {state: action for state in self.state_space}
+            
+            T[action_idx] = self.create_P_pi_matrix(policy)
+        
+        return T
+
+    def get_next_state(self, dx, dy):
+        # make a copy of the current level for simulation
+        temp_level = [list(row) for row in self.level]
+        x, y = self.player_pos
+        nx, ny = x + dx, y + dy  # nx ny for new positions of x and y
+
+        # we check if the new position is within bounds and is not a wall
+        if 0 <= ny < self.height and 0 <= nx < self.width and not self.is_wall(nx, ny):
+            # and we also check if the move is into a box and if the box can move
+            if self.is_box(nx, ny):
+                box_nx, box_ny = nx + dx, ny + dy  # this is the position where the box would move
+                if not (0 <= box_ny < self.height and 0 <= box_nx < self.width and not self.is_wall(box_nx, box_ny)):
+                    # if the box can't move, we return the original state
+                    return self.serialize_state(temp_level)
+
+                # then move the box to the new position in temp_level
+                temp_level[ny][nx] = ' ' if temp_level[ny][nx] == '$' else '.'
+                temp_level[box_ny][box_nx] = '$' if temp_level[box_ny][box_nx] != '.' else 'x'
+
+            # and move the player to the new position in temp_level
+            temp_level[y][x] = ' ' if temp_level[y][x] == '@' else '.'
+            temp_level[ny][nx] = '@' if temp_level[ny][nx] != '.' else '+'
+
+            # and return the new state as a serialized form
+            return self.serialize_state(temp_level)
+
+        # if the move is invalid, return the original state
+        return self.serialize_state(temp_level)
+
+
+    def value_iteration(self, discount_factor=0.9, threshold=0.01, steps=149):
+        V = np.zeros(len(self.state_space))
+        T = self.create_T_matrix()
+        state_idx = {state: idx for idx, state in enumerate(self.state_space)}
+
+        count = 0
+
+        for k in range(steps):
+            new_V = V.copy()
+            for state_idx, state in enumerate(self.state_space):
+                self.level = [list(row) for row in state]
+                self.find_player()
+
+                new_V[state_idx] = max(
+                    [
+                        self.compute_reward(state, action) +
+                        discount_factor * sum(T[a, state_idx, next_state_idx] * V[next_state_idx]
+                                            for next_state_idx in range(len(self.state_space)))
+                        for a, action in enumerate(self.actions)
+                    ]
+                )
+            
+            # check for convergence
+            if np.all(np.abs(new_V - V) < threshold):
+                break
+            V = new_V  # update the value function
+
+            if count > 10000:
+                print("Infinite Loop?")
+                break
+
+        # derive policy from the value function
+        self.policy = self.derive_policy(V, discount_factor)
+        return V
+
+    def derive_policy(self, V, discount_factor=0.9):
+        policy = {}
+        T = self.create_T_matrix()
+        state_idx = {state: idx for idx, state in enumerate(self.state_space)}
+
+        for state_idx, state in enumerate(self.state_space):
+            best_action = max(
+                enumerate(self.actions),
+                key=lambda action_info: (
+                    self.compute_reward(state, action_info[1]) +
+                    discount_factor * sum(
+                        T[action_info[0], state_idx, next_state_idx] * V[next_state_idx]
+                        for next_state_idx in range(len(self.state_space))
+                    )
+                )
+            )[1]
             policy[state] = best_action
-
+            
         return policy
+
 
     def plot_value_function(self, value_function):
         grid_values = np.zeros((self.height, self.width))
