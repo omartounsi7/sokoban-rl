@@ -8,7 +8,7 @@ TILESIZE = 40
 XOFFSET = 25
 YOFFSET = 25
 MALUS = -1
-BONUS = 10
+BONUS = 1
 MAXSTEPS = 100000
 
 class Sokoban:
@@ -22,6 +22,7 @@ class Sokoban:
         self.draw_game()
         self.bind_keys()
         self.game_over = False
+        self.action_space = ['up', 'left', 'down', 'right']
 
         # print("Generating state space...")
         # self.generate_state_space()
@@ -116,9 +117,13 @@ class Sokoban:
             self.player_pos, reward = self.execute_action(self.level, action)
             # print("Reward is " + str(reward))
             self.draw_game()
+            
             if self.check_win(self.level):
+                print("Game won!")
                 self.game_over = True
-                print("Game won.")
+            elif reward == MALUS:
+                print("Game lost!")
+                self.game_over = True
 
     def find_player_in_state(self, state):
         """
@@ -204,25 +209,32 @@ class Sokoban:
         return key_mapping.get(key.lower(), None)
 
     def execute_action(self, state, action):
-        reward = 0
-        
         dx, dy = action
         x, y = self.find_player_in_state(state)
         nx, ny = x + dx, y + dy
+        
+        reward = 0
+        new_position = (x, y)
 
         if self.is_wall(state, nx, ny):
-            return (x, y), 0
+            return new_position, reward
 
         if self.is_box(state, nx, ny):
             if not self.move_box(state, nx, ny, dx, dy):
-                return (x, y), 0
+                return new_position, reward
 
             bx, by = nx + dx, ny + dy
             if self.is_box_stuck(state, bx, by):
                 reward = MALUS
-            if self.is_box_placed(state, bx, by):
+            elif self.is_box_placed(state, bx, by):
                 reward = BONUS
 
+        self.move_agent(state, x, y, nx, ny)
+        new_position = (nx, ny)
+
+        return new_position, reward
+
+    def move_agent(self, state, x, y, nx, ny):
         # Update player's current position
         if state[y][x] == "@":
             state[y][x] = " "
@@ -234,10 +246,6 @@ class Sokoban:
             state[ny][nx] = "+"
         else:
             state[ny][nx] = "@"
-
-        new_position = (nx, ny)
-
-        return new_position, reward
 
     def move_box(self, state, x, y, dx, dy):
         nx, ny = x + dx, y + dy
@@ -301,23 +309,17 @@ class Sokoban:
     def serialize_state(self, state):
         return tuple(tuple(row) for row in state)
 
-    def mc_policy_evaluation(self, num_episodes=1000, discount_factor=0.9, epsilon=0.1, every_visit=False):
-        possible_actions = ['up', 'left', 'down', 'right']
-        
+    def mc_policy_evaluation(self, num_episodes=1000, discount_factor=0.9, epsilon=0.1, every_visit=False):        
         Q = {}
         returns_sum = {}
         returns_count = {}
-        
         policy = {}
         
         for episode in range(num_episodes):
             print("Episode", episode + 1)
             current_state = copy.deepcopy(self.level)
-            
             steps = 0
-
             episode_states_actions_rewards = []
-            
             terminalState = False
 
             while not terminalState and steps < MAXSTEPS:
@@ -325,22 +327,20 @@ class Sokoban:
                 serialized_current_state = self.serialize_state(current_state)
 
                 if random.random() < epsilon:
-                    action = random.choice(possible_actions)
+                    action = random.choice(self.action_space)
                 else:
-                    action = policy.get(serialized_current_state, random.choice(possible_actions))
-
+                    action = policy.get(serialized_current_state, random.choice(self.action_space))
                 
                 action_vector = self.get_action(action)
                 new_pos, reward = self.execute_action(current_state, action_vector)
                 episode_states_actions_rewards.append((serialized_current_state, action, reward))
-
-                if reward == MALUS:
-                    terminalState = True
-                    print("BOX STUCK!")
-                elif self.check_win(current_state):
-                    terminalState = True
+                
+                if self.check_win(current_state):
                     print("PUZZLE COMPLETED!")
-
+                    terminalState = True
+                elif reward == MALUS:
+                    print("BOX STUCK!")
+                    terminalState = True
 
             print("Number of steps: " + str(steps))
 
@@ -358,12 +358,12 @@ class Sokoban:
                     visited_state_actions.add((state, action))
 
                     if state not in Q:
-                        Q[state] = {a: 0.0 for a in possible_actions}
-                        returns_sum[state] = {a: 0.0 for a in possible_actions}
-                        returns_count[state] = {a: 0 for a in possible_actions}
+                        Q[state] = {a: 0.0 for a in self.action_space}
+                        returns_sum[state] = {a: 0.0 for a in self.action_space}
+                        returns_count[state] = {a: 0 for a in self.action_space}
                     
                     returns_sum[state][action] += G
-                    returns_count[state][action] += BONUS
+                    returns_count[state][action] += 1
                     Q[state][action] = returns_sum[state][action] / returns_count[state][action]
                     best_action = max(Q[state], key=Q[state].get)
                     policy[state] = best_action
@@ -389,6 +389,10 @@ class Sokoban:
             self.player_pos, reward = self.execute_action(self.level, action_vector)
             # print("Reward is " + str(reward))
             self.draw_game()
+            
             if self.check_win(self.level):
+                print("Game won!")
                 self.game_over = True
-                print("Game won.")
+            elif reward == MALUS:
+                print("Game lost!")
+                self.game_over = True
