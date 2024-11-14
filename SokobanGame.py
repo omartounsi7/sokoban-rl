@@ -58,7 +58,6 @@ class Sokoban:
         self.level = [row.copy() for row in self.initial_level]
         self.player_pos = self.find_player_in_state(self.level)
         self.game_over = False
-        self.message_label.config(text="")
         self.draw_game()
 
         if self.policy:
@@ -117,7 +116,9 @@ class Sokoban:
             self.player_pos, reward = self.execute_action(self.level, action)
             # print("Reward is " + str(reward))
             self.draw_game()
-            self.check_win()
+            if self.check_win(self.level):
+                self.game_over = True
+                print("Game won.")
 
     def find_player_in_state(self, state):
         """
@@ -291,22 +292,12 @@ class Sokoban:
             return True  # Treat out-of-bounds as walls
         return state[y][x] in ["#", "$", "x"]
 
-    def check_win(self):
-        if not self.is_terminal(self.level):
-            return False
-        self.game_over = True
-        self.message_label.config(text="You won!")
-        return True
-    
-    def is_terminal(self, state):
-        """
-        Checks if the state is terminal (all boxes on goals).
-        """
+    def check_win(self, state):
         for row in state:
             if '$' in row:
                 return False
         return True
-
+    
     def serialize_state(self, state):
         return tuple(tuple(row) for row in state)
 
@@ -344,11 +335,11 @@ class Sokoban:
                 episode_states_actions_rewards.append((serialized_current_state, action, reward))
 
                 if reward == MALUS:
+                    terminalState = True
                     print("BOX STUCK!")
+                elif self.check_win(current_state):
                     terminalState = True
-                elif self.is_terminal(current_state):
-                    print("GAME WON!")
-                    terminalState = True
+                    print("PUZZLE COMPLETED!")
 
 
             print("Number of steps: " + str(steps))
@@ -398,4 +389,6 @@ class Sokoban:
             self.player_pos, reward = self.execute_action(self.level, action_vector)
             # print("Reward is " + str(reward))
             self.draw_game()
-            self.check_win()
+            if self.check_win(self.level):
+                self.game_over = True
+                print("Game won.")
