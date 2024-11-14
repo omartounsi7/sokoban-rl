@@ -1,4 +1,3 @@
-from collections import deque
 import tkinter as tk
 import time
 import itertools
@@ -11,7 +10,6 @@ YOFFSET = 25
 MALUS = -1
 BONUS = 10
 MAXSTEPS = 100000
-MAXLOOPSIZE = 3
 
 class Sokoban:
     def __init__(self, master, level_file):
@@ -331,12 +329,9 @@ class Sokoban:
             
             terminalState = False
 
-            # recent_states = deque(maxlen=MAXLOOPSIZE)
-
             while not terminalState and steps < MAXSTEPS:
                 steps += 1
                 serialized_current_state = self.serialize_state(current_state)
-                # recent_states.append(current_state)
 
                 if random.random() < epsilon:
                     action = random.choice(possible_actions)
@@ -345,15 +340,7 @@ class Sokoban:
 
                 
                 action_vector = self.get_action(action)
-                
-                # print("Action:", action)
-                # self.print_state(current_state)
-
-                # old_pos = self.find_player_in_state(current_state)
                 new_pos, reward = self.execute_action(current_state, action_vector)
-                
-                # print("Reward:", reward)
-                
                 episode_states_actions_rewards.append((serialized_current_state, action, reward))
 
                 if reward == MALUS:
@@ -362,9 +349,6 @@ class Sokoban:
                 elif self.is_terminal(current_state):
                     print("GAME WON!")
                     terminalState = True
-                # elif current_state in recent_states:
-                #     print("LOOP!")
-                #     terminalState = True
 
 
             print("Number of steps: " + str(steps))
