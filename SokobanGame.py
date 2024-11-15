@@ -410,6 +410,10 @@ class Sokoban:
         for state in Q_old:
             if state not in Q_new:
                 continue 
+            action_old = max(Q_old[state], key=Q_old[state].get)
+            action_new = max(Q_new[state], key=Q_new[state].get)
+            if action_old != action_new:
+                return False
             for action in Q_old[state]:
                 if action not in Q_new[state]:
                     continue
