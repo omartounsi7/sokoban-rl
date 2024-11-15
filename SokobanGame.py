@@ -8,7 +8,8 @@ TILESIZE = 40
 XOFFSET = 25
 YOFFSET = 25
 SUPERMALUS = -100
-MALUS = -0.1
+MALUS = -1
+STEPREWARD = 0
 BONUS = 1
 SUPERBONUS = 100
 MAXSTEPS = 100000
@@ -28,7 +29,7 @@ class Sokoban:
         self.action_space = ['up', 'left', 'down', 'right']
 
         # self.generate_state_space()
-        self.mc_policy_evaluation()
+        self.mc_policy_evaluation(num_episodes=1000000, gamma=0.85, epsilon=0.9, every_visit=True, convergence_thres=0.001)
         self.auto_play()
         self.print_metrics()
 
@@ -223,19 +224,20 @@ class Sokoban:
         if self.is_box(state, nx, ny):
             if not self.move_box(state, nx, ny, dx, dy):
                 return new_position, reward, moved_box
-
             moved_box = True
-            bx, by = nx + dx, ny + dy
+        
+        self.move_agent(state, x, y, nx, ny)
+        new_position = (nx, ny)
+        reward = STEPREWARD
 
+        if moved_box:
+            bx, by = nx + dx, ny + dy
             if self.is_box_stuck(state, bx, by):
                 reward = SUPERMALUS
             elif self.check_win(state):
                 reward = SUPERBONUS
             elif self.is_box_placed(state, bx, by):
                 reward = BONUS
-
-        self.move_agent(state, x, y, nx, ny)
-        new_position = (nx, ny)
 
         return new_position, reward, moved_box
 
