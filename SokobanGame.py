@@ -313,7 +313,7 @@ class Sokoban:
     def serialize_state(self, state):
         return tuple(tuple(row) for row in state)
 
-    def mc_policy_evaluation(self, num_episodes=100000, gamma=0.95, epsilon=0.9, every_visit=True, convergence_thres=0.001):        
+    def mc_policy_evaluation(self, num_episodes=100000, gamma=0.95, epsilon=0.9, every_visit=True, convergence_thres=0):        
         print("Running Monte Carlo policy optimization algorithm...")
         Q = {}
         returns_sum = {}
@@ -402,7 +402,7 @@ class Sokoban:
         print("Monte Carlo policy optimization completed.")
 
     def has_converged(self, Q_old, Q_new, threshold=0.001):
-        if len(Q_old) == 0:
+        if len(Q_old) < 5:
             return False
         max_diff = 0 
         for state in Q_old:
