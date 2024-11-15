@@ -30,6 +30,7 @@ class Sokoban:
         # self.generate_state_space()
         self.mc_policy_evaluation()
         self.auto_play()
+        self.print_metrics()
 
     def load_level(self):
         with open(self.level_file, "r") as file:
@@ -313,8 +314,9 @@ class Sokoban:
     def serialize_state(self, state):
         return tuple(tuple(row) for row in state)
 
-    def mc_policy_evaluation(self, num_episodes=100000, gamma=0.95, epsilon=0.9, every_visit=True, convergence_thres=0):        
+    def mc_policy_evaluation(self, num_episodes=100000, gamma=0.95, epsilon=0.9, every_visit=True, convergence_thres=0.001):        
         print("Running Monte Carlo policy optimization algorithm...")
+        start_time = time.time()
         Q = {}
         returns_sum = {}
         returns_count = {}
@@ -366,7 +368,6 @@ class Sokoban:
                     terminalState = True
 
             # print("Number of steps: " + str(steps))
-
             
             episode_length = len(trajectory)
             visited_state_actions = set()
@@ -398,10 +399,11 @@ class Sokoban:
                 break
     
         self.policy = policy
+        self.time_to_train = time.time() - start_time
         print("Total number of episodes: " + str(episode + 1))
         print("Monte Carlo policy optimization completed.")
 
-    def has_converged(self, Q_old, Q_new, threshold=0.001):
+    def has_converged(self, Q_old, Q_new, threshold):
         if len(Q_old) < 5:
             return False
         max_diff = 0 
@@ -420,6 +422,7 @@ class Sokoban:
         Automatically plays the game according to the learned policy.
         """
         print("Playing level according to the learned policy...")
+        self.number_of_actions = 0
         while not self.game_over:
             state = self.serialize_state(self.level)
             action = self.policy.get(state, None)
@@ -432,6 +435,7 @@ class Sokoban:
                 break
             time.sleep(1)  # Wait between actions for visualization
             self.player_pos, reward, moved_box = self.execute_action(self.level, action_vector)
+            self.number_of_actions += 1
             self.draw_game()
             if reward == SUPERBONUS:
                 print("Game won!")
@@ -440,3 +444,12 @@ class Sokoban:
                 print("Game lost!")
                 self.game_over = True
         print("Finished playing level.")
+
+    def print_metrics(self):
+        print("Game won: " + str(self.check_win(self.level)))
+        print("Percentage of boxes placed: " + str(self.count_placed_boxes(self.level) / self.total_boxes * 100))
+        print("Number of actions: " + str(self.number_of_actions))
+        print(f"Time to train: : {self.time_to_train:.2f}s")
+
+    def count_placed_boxes(self, state):
+        return sum(row.count("x") for row in state)
