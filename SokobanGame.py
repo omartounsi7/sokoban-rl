@@ -7,9 +7,12 @@ import copy
 TILESIZE = 40
 XOFFSET = 25
 YOFFSET = 25
-MALUS = -1
+SUPERMALUS = -100
+MALUS = -0.1
 BONUS = 1
+SUPERBONUS = 100
 MAXSTEPS = 100000
+EPSILONDECAY = 0.995
 
 class Sokoban:
     def __init__(self, master, level_file):
@@ -24,13 +27,8 @@ class Sokoban:
         self.game_over = False
         self.action_space = ['up', 'left', 'down', 'right']
 
-        # print("Generating state space...")
         # self.generate_state_space()
-
-        print("Training policy...")
-        self.mc_policy_evaluation(num_episodes=1000, discount_factor=0.9, epsilon=0.2, every_visit=True)
-
-        print("Playing level...")
+        self.mc_policy_evaluation()
         self.auto_play()
 
     def load_level(self):
@@ -114,14 +112,13 @@ class Sokoban:
 
         action = self.get_action(event.keysym)
         if action:
-            self.player_pos, reward = self.execute_action(self.level, action)
-            # print("Reward is " + str(reward))
+            self.player_pos, reward, moved_box = self.execute_action(self.level, action)
             self.draw_game()
             
-            if self.check_win(self.level):
+            if reward == SUPERBONUS:
                 print("Game won!")
                 self.game_over = True
-            elif reward == MALUS:
+            elif reward == SUPERMALUS:
                 print("Game lost!")
                 self.game_over = True
 
@@ -141,6 +138,7 @@ class Sokoban:
             print(row)
 
     def generate_state_space(self):
+        print("Generating state space...")
         state_space = set()
         wall_positions = set()
         goal_positions = set()
@@ -194,6 +192,7 @@ class Sokoban:
 
                     state_space.add(tuple(level_state))
         self.state_space = state_space
+        print("Finished generating state space.")
 
     def get_action(self, key):
         key_mapping = {
@@ -213,26 +212,31 @@ class Sokoban:
         x, y = self.find_player_in_state(state)
         nx, ny = x + dx, y + dy
         
-        reward = 0
+        reward = MALUS
         new_position = (x, y)
+        moved_box = False
 
         if self.is_wall(state, nx, ny):
-            return new_position, reward
+            return new_position, reward, moved_box
 
         if self.is_box(state, nx, ny):
             if not self.move_box(state, nx, ny, dx, dy):
-                return new_position, reward
+                return new_position, reward, moved_box
 
+            moved_box = True
             bx, by = nx + dx, ny + dy
+
             if self.is_box_stuck(state, bx, by):
-                reward = MALUS
+                reward = SUPERMALUS
+            elif self.check_win(state):
+                reward = SUPERBONUS
             elif self.is_box_placed(state, bx, by):
                 reward = BONUS
 
         self.move_agent(state, x, y, nx, ny)
         new_position = (nx, ny)
 
-        return new_position, reward
+        return new_position, reward, moved_box
 
     def move_agent(self, state, x, y, nx, ny):
         # Update player's current position
@@ -309,51 +313,66 @@ class Sokoban:
     def serialize_state(self, state):
         return tuple(tuple(row) for row in state)
 
-    def mc_policy_evaluation(self, num_episodes=1000, discount_factor=0.9, epsilon=0.1, every_visit=False):        
+    def mc_policy_evaluation(self, num_episodes=100000, gamma=0.95, epsilon=0.9, every_visit=True, convergence_thres=0.001):        
+        print("Running Monte Carlo policy optimization algorithm...")
         Q = {}
         returns_sum = {}
         returns_count = {}
         policy = {}
         
         for episode in range(num_episodes):
-            print("Episode", episode + 1)
+            # print("Episode", episode + 1)
+            Q_old = copy.deepcopy(Q)
             current_state = copy.deepcopy(self.level)
             steps = 0
-            episode_states_actions_rewards = []
+            trajectory = []
             terminalState = False
+
+            moved_box = False
+            prev_pos = None
 
             while not terminalState and steps < MAXSTEPS:
                 steps += 1
                 serialized_current_state = self.serialize_state(current_state)
 
+                epsilon = max(0.1, epsilon * EPSILONDECAY)
+                
                 if random.random() < epsilon:
                     action = random.choice(self.action_space)
                 else:
                     action = policy.get(serialized_current_state, random.choice(self.action_space))
                 
                 action_vector = self.get_action(action)
-                new_pos, reward = self.execute_action(current_state, action_vector)
-                episode_states_actions_rewards.append((serialized_current_state, action, reward))
+
+                temp_pos = self.find_player_in_state(current_state)
+                previously_moved_box = moved_box
+
+                new_pos, reward, moved_box = self.execute_action(current_state, action_vector)
                 
-                if self.check_win(current_state):
-                    print("PUZZLE COMPLETED!")
+                if prev_pos == new_pos and not previously_moved_box:
+                    # print("LOOP DETECTED!")
                     terminalState = True
-                elif reward == MALUS:
-                    print("BOX STUCK!")
+                    trajectory.append((serialized_current_state, action, SUPERMALUS))
+                else:
+                    trajectory.append((serialized_current_state, action, reward))
+                
+                prev_pos = temp_pos
+
+                if reward == SUPERBONUS:
+                    # print("PUZZLE COMPLETED!")
+                    terminalState = True
+                elif reward == SUPERMALUS:
+                    # print("BOX STUCK!")
                     terminalState = True
 
-            print("Number of steps: " + str(steps))
+            # print("Number of steps: " + str(steps))
 
-            # Calculate returns for the episode
-            G = 0
-            episode_length = len(episode_states_actions_rewards)
+            
+            episode_length = len(trajectory)
             visited_state_actions = set()
 
-            for t in reversed(range(episode_length)):
-                state, action, reward = episode_states_actions_rewards[t]
-                G = discount_factor * G + reward
-
-                # Check if this is the first occurrence of (state, action)
+            for t in range(episode_length):
+                state, action, reward = trajectory[t]
                 if every_visit or (state, action) not in visited_state_actions:
                     visited_state_actions.add((state, action))
 
@@ -362,19 +381,45 @@ class Sokoban:
                         returns_sum[state] = {a: 0.0 for a in self.action_space}
                         returns_count[state] = {a: 0 for a in self.action_space}
                     
+                    G = 0
+                    for k in range(t, episode_length):
+                        state_k, action_k, reward_k = trajectory[k]
+                        G += gamma ** (k - t) * reward_k
+                    
                     returns_sum[state][action] += G
                     returns_count[state][action] += 1
                     Q[state][action] = returns_sum[state][action] / returns_count[state][action]
+
                     best_action = max(Q[state], key=Q[state].get)
                     policy[state] = best_action
 
+            if convergence_thres > 0 and self.has_converged(Q_old, Q, convergence_thres):
+                print("Q has converged.")
+                break
+    
         self.policy = policy
-        print("First Visit MC Policy Evaluation Completed.")
+        print("Total number of episodes: " + str(episode + 1))
+        print("Monte Carlo policy optimization completed.")
+
+    def has_converged(self, Q_old, Q_new, threshold=0.001):
+        if len(Q_old) == 0:
+            return False
+        max_diff = 0 
+        for state in Q_old:
+            if state not in Q_new:
+                continue 
+            for action in Q_old[state]:
+                if action not in Q_new[state]:
+                    continue
+                diff = abs(Q_old[state][action] - Q_new[state][action])
+                max_diff = max(max_diff, diff) 
+        return max_diff < threshold
 
     def auto_play(self):
         """
         Automatically plays the game according to the learned policy.
         """
+        print("Playing level according to the learned policy...")
         while not self.game_over:
             state = self.serialize_state(self.level)
             action = self.policy.get(state, None)
@@ -386,13 +431,12 @@ class Sokoban:
                 print(f"Invalid action '{action}' in policy for state.")
                 break
             time.sleep(1)  # Wait between actions for visualization
-            self.player_pos, reward = self.execute_action(self.level, action_vector)
-            # print("Reward is " + str(reward))
+            self.player_pos, reward, moved_box = self.execute_action(self.level, action_vector)
             self.draw_game()
-            
-            if self.check_win(self.level):
+            if reward == SUPERBONUS:
                 print("Game won!")
                 self.game_over = True
-            elif reward == MALUS:
+            elif reward == SUPERMALUS:
                 print("Game lost!")
                 self.game_over = True
+        print("Finished playing level.")
