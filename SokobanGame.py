@@ -301,8 +301,6 @@ class Sokoban:
         return False
 
     def is_obstacle(self, state, x, y):
-        if x < 0 or x >= len(state[0]) or y < 0 or y >= len(state):
-            return True  # Treat out-of-bounds as walls
         return state[y][x] in ["#", "$", "x"]
 
     def check_win(self, state):
