@@ -5,7 +5,7 @@ from algorithms import mc_policy_evaluation
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:
-        print("Usage: python montecarlo.py puzzle number_of_episodes discount_factor exploration_rate")
+        print("Usage: python montecarlo.py <puzzle_file> <number_of_episodes> <discount_factor> <exploration_rate>")
         sys.exit(1)
 
     root = tk.Tk()

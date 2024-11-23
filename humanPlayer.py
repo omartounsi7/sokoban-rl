@@ -4,7 +4,7 @@ from SokobanGame import Sokoban
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python humanPlayer.py puzzle")
+        print("Usage: python humanPlayer.py <puzzle_file>")
         sys.exit(1)
 
     root = tk.Tk()
