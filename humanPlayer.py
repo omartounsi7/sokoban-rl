@@ -1,6 +1,6 @@
 import sys
 import tkinter as tk
-from SokobanGame import Sokoban
+from src.SokobanGame import Sokoban
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

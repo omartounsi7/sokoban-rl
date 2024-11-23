@@ -1,7 +1,7 @@
 import sys
 import tkinter as tk
-from SokobanGame import Sokoban
-from algorithms import mc_policy_evaluation
+from src.SokobanGame import Sokoban
+from src.algorithms import mc_policy_evaluation
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:

@@ -1,5 +1,5 @@
 import itertools
-from constants import *
+from src.constants import *
 
 def count_placed_boxes(state):
     return sum(row.count("x") for row in state)

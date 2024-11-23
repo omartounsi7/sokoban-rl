@@ -1,7 +1,7 @@
-from constants import *
+from src.constants import *
 import tkinter as tk
 import time
-import util
+import src.util
 
 TILESIZE = 40
 XOFFSET = 25
@@ -26,7 +26,7 @@ class Sokoban:
         self.initial_level = [row.copy() for row in self.level]
         self.height = len(self.level)
         self.width = max(len(line) for line in self.level)
-        self.player_pos = util.find_player_in_state(self.level)
+        self.player_pos = src.util.find_player_in_state(self.level)
         self.total_boxes = sum(row.count("$") for row in self.level)
 
     def create_widgets(self):
@@ -43,7 +43,7 @@ class Sokoban:
 
     def reset_level(self):
         self.level = [row.copy() for row in self.initial_level]
-        self.player_pos = util.find_player_in_state(self.level)
+        self.player_pos = src.util.find_player_in_state(self.level)
         self.game_over = False
         self.draw_game()
 
@@ -98,9 +98,9 @@ class Sokoban:
             self.reset_level()
             return
 
-        action = util.get_action(event.keysym)
+        action = src.util.get_action(event.keysym)
         if action:
-            self.player_pos, reward, moved_box = util.execute_action(self.level, action)
+            self.player_pos, reward, moved_box = src.util.execute_action(self.level, action)
             self.draw_game()
             
             if reward == SUPERBONUS:
@@ -115,17 +115,17 @@ class Sokoban:
         print("Playing level according to the learned policy...")
         self.number_of_actions = 0
         while not self.game_over:
-            state = util.serialize_state(self.level)
+            state = src.util.serialize_state(self.level)
             action = self.policy.get(state, None)
             if action is None:
                 print("No action found in policy for the current state.")
                 break
-            action_vector = util.get_action(action)
+            action_vector = src.util.get_action(action)
             if action_vector is None:
                 print(f"Invalid action '{action}' in policy for state.")
                 break
             time.sleep(1)  
-            self.player_pos, reward, moved_box = util.execute_action(self.level, action_vector)
+            self.player_pos, reward, moved_box = src.util.execute_action(self.level, action_vector)
             self.number_of_actions += 1
             self.draw_game()
             if reward == SUPERBONUS:
@@ -137,5 +137,5 @@ class Sokoban:
         print("Finished playing level.")
 
     def print_metrics(self):
-        print("Percentage of boxes placed: " + str(util.count_placed_boxes(self.level) / self.total_boxes * 100))
+        print("Percentage of boxes placed: " + str(src.util.count_placed_boxes(self.level) / self.total_boxes * 100))
         print("Number of actions: " + str(self.number_of_actions))

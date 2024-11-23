@@ -1,8 +1,8 @@
-from constants import *
+from src.constants import *
 import time
 import random
 import copy
-import util
+import src.util
 
 def mc_policy_evaluation(initial_state, num_episodes=100000, gamma=0.95, epsilon=0.9, every_visit=True, convergence_thres=0.001):        
     print("Running Monte Carlo policy optimization algorithm...")
@@ -25,7 +25,7 @@ def mc_policy_evaluation(initial_state, num_episodes=100000, gamma=0.95, epsilon
 
         while not terminalState and steps < MAXSTEPS:
             steps += 1
-            serialized_current_state = util.serialize_state(current_state)
+            serialized_current_state = src.util.serialize_state(current_state)
             epsilon = max(0.1, epsilon * EPSILONDECAY)
 
             if random.random() < epsilon:
@@ -33,12 +33,12 @@ def mc_policy_evaluation(initial_state, num_episodes=100000, gamma=0.95, epsilon
             else:
                 action = policy.get(serialized_current_state, random.choice(ACTIONSPACE))
             
-            action_vector = util.get_action(action)
+            action_vector = src.util.get_action(action)
 
-            temp_pos = util.find_player_in_state(current_state)
+            temp_pos = src.util.find_player_in_state(current_state)
             previously_moved_box = moved_box
 
-            new_pos, reward, moved_box = util.execute_action(current_state, action_vector)
+            new_pos, reward, moved_box = src.util.execute_action(current_state, action_vector)
             
             if prev_pos == new_pos and not previously_moved_box:
                 # print("LOOP DETECTED!")
