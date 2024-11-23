@@ -28,11 +28,6 @@ class Sokoban:
         self.game_over = False
         self.action_space = ['up', 'left', 'down', 'right']
 
-        # self.generate_state_space()
-        self.mc_policy_evaluation(num_episodes=1000000, gamma=0.85, epsilon=0.9, every_visit=True, convergence_thres=0.001)
-        self.auto_play()
-        self.print_metrics()
-
     def load_level(self):
         with open(self.level_file, "r") as file:
             lines = file.readlines()
