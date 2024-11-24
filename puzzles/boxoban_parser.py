@@ -24,7 +24,7 @@ def parse_all_levels(input_file):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python parser.py puzzles/NNN.txt")
+        print("Usage: python boxoban_parser.py boxoban_levels_file")
         sys.exit(1)
 
     parse_all_levels(sys.argv[1])
