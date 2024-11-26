@@ -11,11 +11,5 @@ python .\montecarlo.py <puzzle_file> <number_of_episodes> <discount_factor> <exp
 Example:
 
 ```bash
-python .\montecarlo.py .\puzzles\easy.txt 100000 0.85 0.9
-```
-
-To play the game yourself, run:
-
-```bash
-python .\humanPlayer.py <puzzle_file>
+python .\montecarlo.py .\puzzles\easy.txt 2000 0.85 0.9
 ```
