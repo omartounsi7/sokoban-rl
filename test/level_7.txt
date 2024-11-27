@@ -1,0 +1,12 @@
+##########
+#    .@###
+#$$#$$####
+#  #  ####
+#  #.#####
+#   ######
+#     ####
+#   . ####
+#. #######
+##########
+
+['left', 'left', 'down', 'down', 'right', 'up', 'left', 'up', 'left', 'left', 'down', 'down', 'down', 'down', 'down', 'left', 'down', 'right', 'right', 'up', 'up', 'left', 'up', 'up', 'up', 'up', 'left', 'down', 'down', 'down', 'down', 'down', 'down']

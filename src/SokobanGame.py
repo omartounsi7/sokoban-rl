@@ -7,6 +7,7 @@ TILESIZE = 40
 XOFFSET = 25
 YOFFSET = 25
 
+
 class Sokoban:
     def __init__(self, master, level_file):
         self.master = master
@@ -18,6 +19,7 @@ class Sokoban:
         self.draw_game()
         self.bind_keys()
         self.game_over = False
+        self.recorded_actions = []
 
     def load_level(self):
         with open(self.level_file, "r") as file:
@@ -66,7 +68,7 @@ class Sokoban:
                     self.canvas.create_rectangle(
                         x1 + 10, y1 + 10, x2 - 10, y2 - 10, fill="brown"
                     )
-                elif char == "x": 
+                elif char == "x":
                     self.canvas.create_rectangle(x1, y1, x2, y2, fill="lightyellow")
                     self.canvas.create_rectangle(
                         x1 + 10, y1 + 10, x2 - 10, y2 - 10, fill="green"
@@ -74,7 +76,7 @@ class Sokoban:
                 elif char == "@":
                     self.canvas.create_rectangle(x1, y1, x2, y2, fill="white")
                     self.canvas.create_oval(x1 + 5, y1 + 5, x2 - 5, y2 - 5, fill="blue")
-                elif char == "+": 
+                elif char == "+":
                     self.canvas.create_rectangle(x1, y1, x2, y2, fill="lightyellow")
                     self.canvas.create_oval(x1 + 5, y1 + 5, x2 - 5, y2 - 5, fill="blue")
                 else:
@@ -88,7 +90,7 @@ class Sokoban:
             self.master.bind("<Key>", self.key_pressed_human)
 
     def key_pressed_policy(self, event):
-        pass 
+        pass
 
     def key_pressed_human(self, event):
         if self.game_over:
@@ -100,16 +102,17 @@ class Sokoban:
 
         action = src.util.get_action(event.keysym)
         if action:
-            self.player_pos, reward, moved_box = src.util.execute_action(self.level, action)
+            self.player_pos, reward, moved_box = src.util.execute_action(
+                self.level, action
+            )
             self.draw_game()
-            
+
             if reward == SUPERBONUS:
                 print("Game won!")
                 self.game_over = True
             elif reward == SUPERMALUS:
                 print("Game lost!")
                 self.game_over = True
-
 
     def auto_play(self):
         print("Playing level according to the learned policy...")
@@ -124,8 +127,10 @@ class Sokoban:
             if action_vector is None:
                 print(f"Invalid action '{action}' in policy for state.")
                 break
-            time.sleep(1)  
-            self.player_pos, reward, moved_box = src.util.execute_action(self.level, action_vector)
+            time.sleep(1)
+            self.player_pos, reward, moved_box = src.util.execute_action(
+                self.level, action_vector
+            )
             self.number_of_actions += 1
             self.draw_game()
             if reward == SUPERBONUS:
@@ -137,5 +142,36 @@ class Sokoban:
         print("Finished playing level.")
 
     def print_metrics(self):
-        print("Percentage of boxes placed: " + str(src.util.count_placed_boxes(self.level) / self.total_boxes * 100))
+        print(
+            "Percentage of boxes placed: "
+            + str(src.util.count_placed_boxes(self.level) / self.total_boxes * 100)
+        )
         print("Number of actions: " + str(self.number_of_actions))
+
+    def key_pressed_human(self, event):
+        if self.game_over:
+            return
+
+        if event.keysym == "r":
+            self.reset_level()
+            return
+
+        action = src.util.get_action(event.keysym)
+        if action:
+            self.recorded_actions.append(event.keysym.lower())  # Record the WASD key
+            self.player_pos, reward, moved_box = src.util.execute_action(
+                self.level, action
+            )
+            self.draw_game()
+
+            if reward == SUPERBONUS:
+                print("Game won!")
+                self.game_over = True
+                self.output_recorded_actions()
+            elif reward == SUPERMALUS:
+                print("Game lost!")
+                self.game_over = True
+
+    def output_recorded_actions(self):
+        """Outputs the recorded series of actions after the game is won."""
+        print("Recorded Actions:", "".join(self.recorded_actions))

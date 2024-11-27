@@ -2,26 +2,27 @@ import src.util
 from src.constants import *
 
 
-def compute_value_functions(env, optimal_policy, gamma=0.99):
+def compute_v_and_q_from_policy(env, policy_actions, gamma=0.99):
     V = {}
     Q = {}
 
-    for state in optimal_policy.keys():
-        V[state] = 0
-        Q[state] = {}
+    state = env.reset()
+    trajectory = []
 
-        env.reset()
-        env.set_serialized_state(state)
+    for action in policy_actions:
+        serialized_state = src.util.serialize_state(state)
+        next_state, reward, done, truncated, _ = env.step(ACTIONSPACE[action])
+        trajectory.append((serialized_state, action, reward))
+        state = next_state
+        if done or truncated:
+            break
 
-        for action in ACTIONSPACE.keys():
-            next_obs, reward, done, _, _ = env.step(action)
-            next_state = src.util.serialize_state(next_obs)
-
-            if done:
-                Q[state][action] = reward
-            else:
-                Q[state][action] = reward + gamma * V.get(next_state, 0)
-
-        V[state] = max(Q[state].values())
+    G = 0
+    for serialized_state, action, reward in reversed(trajectory):
+        G = reward + gamma * G
+        V[serialized_state] = G
+        if serialized_state not in Q:
+            Q[serialized_state] = {}
+        Q[serialized_state][action] = G
 
     return V, Q

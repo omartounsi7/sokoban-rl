@@ -1,0 +1,11 @@
+ ###  ####
+ # ####  #
+ # $     #
+ # ###   #
+##   # ###
+#      @ #
+#   #  # #
+#.####   #
+###  #####
+
+['left', 'left', 'left', 'left', 'left', 'up', 'up', 'up', 'right', 'right', 'right', 'right', 'down', 'right', 'right', 'up', 'up', 'left', 'down', 'right', 'down', 'left', 'up', 'left', 'down', 'down', 'down', 'right', 'right', 'down', 'down', 'left', 'left', 'up', 'down', 'right', 'right', 'up', 'up', 'left', 'left', 'left', 'left', 'left', 'up', 'left', 'down', 'right', 'down', 'left', 'up', 'left', 'down']

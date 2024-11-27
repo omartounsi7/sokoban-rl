@@ -1,0 +1,6 @@
+#########
+#@$    .#
+#   $.  #
+#########
+
+['right', 'right', 'right', 'left', 'down', 'right', 'up', 'right', 'right']
