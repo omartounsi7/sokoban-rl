@@ -33,7 +33,7 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, conv
             else:
                 action = policy.get(current_state, random.choice(action_space))
             
-            obs, reward, done, info = env.step(action)
+            obs, reward, terminated, truncated, info = env.step(action)
             serialized_obs = src.util.serialize_state(obs)
             
             if serialized_obs in visited_states:
@@ -43,7 +43,7 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, conv
             else:
                 trajectory.append((current_state, action, reward))
             
-            if done:
+            if terminated:
                 terminalState = True
             else:
                 current_state = serialized_obs

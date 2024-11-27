@@ -63,11 +63,11 @@ class SokobanEnv(gym.Env):
         nx, ny = x + dx, y + dy
         
         if src.util.is_wall(self.level, nx, ny):
-            return self.get_observation(), reward, self.game_over, {}
+            return self.get_observation(), reward, self.game_over, False, {}
         
         if src.util.is_box(self.level, nx, ny):
             if not src.util.move_box(self.level, nx, ny, dx, dy):
-                return self.get_observation(), reward, self.game_over, {}
+                return self.get_observation(), reward, self.game_over, False, {}
             moved_box = True
         
         src.util.move_agent(self.level, x, y, nx, ny)
@@ -85,7 +85,7 @@ class SokobanEnv(gym.Env):
             elif src.util.is_box_placed(self.level, bx, by):
                 reward = BONUS
         
-        return self.get_observation(), reward, self.game_over, {}
+        return self.get_observation(), reward, self.game_over, False, {}
     
     def render(self):
         if self.root is None:
@@ -171,7 +171,7 @@ class SokobanEnv(gym.Env):
         elif not self.done:
             state = src.util.serialize_state(self.obs)
             action = self.policy.get(state, self.action_space.sample())
-            self.obs, reward, self.done, info = self.step(action)
+            self.obs, reward, self.done, truncated, info = self.step(action)
             self.action_sequence.append(action)
             self.steps += 1
             if self.done:
