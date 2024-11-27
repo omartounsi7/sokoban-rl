@@ -22,7 +22,7 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, conv
         trajectory = []
         terminalState = False
         visited_states = set()
-        current_state = src.util.serialize_state(env.reset())
+        current_state = tuple(env.reset())
 
         while not terminalState:
             visited_states.add(current_state)
@@ -34,7 +34,7 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, conv
                 action = policy.get(current_state, random.choice(action_space))
             
             obs, reward, terminated, truncated, info = env.step(action)
-            serialized_obs = src.util.serialize_state(obs)
+            serialized_obs = tuple(obs)
             
             if serialized_obs in visited_states:
                 # print("LOOP DETECTED!")
