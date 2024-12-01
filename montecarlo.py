@@ -15,7 +15,7 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, conv
     returns_count = {}
     policy = {}
     action_space = list(ACTIONSPACE.keys())
-    
+
     for episode in range(num_episodes):
         # print("Episode " + str(episode + 1))
         Q_old = copy.deepcopy(Q)
@@ -27,7 +27,7 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, conv
         while not terminalState:
             visited_states.add(current_state)
             epsilon = max(MINEPSILON, epsilon * EPSILONDECAY)
-            
+
             if random.random() < epsilon:
                 action = random.choice(action_space)
             else:
@@ -42,12 +42,12 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, conv
                 terminalState = True
             else:
                 trajectory.append((current_state, action, reward))
-            
+
             if terminated:
                 terminalState = True
             else:
                 current_state = serialized_obs
-        
+
         episode_length = len(trajectory)
         visited_state_actions = set()
 
@@ -72,7 +72,7 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, conv
         if episode > MINEPISODES and has_converged(Q_old, Q, convergence_thres):
             print("Q has converged.")
             break
-    
+
     time_to_train = time.time() - start_time
     print(f"Time to train: {time_to_train:.2f}s")
     print("Total number of episodes: " + str(episode + 1))
@@ -84,6 +84,7 @@ def has_converged(Q_old, Q_new, threshold):
     for state in Q_old:
         if state not in Q_new:
             continue 
+
         action_old = max(Q_old[state], key=Q_old[state].get)
         action_new = max(Q_new[state], key=Q_new[state].get)
         if action_old != action_new:
@@ -93,16 +94,24 @@ def has_converged(Q_old, Q_new, threshold):
                 continue
             diff = abs(Q_old[state][action] - Q_new[state][action])
             max_diff = max(max_diff, diff) 
+
     return max_diff < threshold
 
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:
-        print("Usage: python montecarlo.py <puzzle_file> <number_of_episodes> <discount_factor> <exploration_rate>")
+        print(
+            "Usage: python montecarlo.py <puzzle_file> <number_of_episodes> <discount_factor> <exploration_rate>"
+        )
         sys.exit(1)
-    
+
     level_file = sys.argv[1]
     env = SokobanEnv(level_file)
-    policy = mc_policy_evaluation(env, num_episodes=int(sys.argv[2]), gamma=float(sys.argv[3]), epsilon=float(sys.argv[4]))
+    policy = mc_policy_evaluation(
+        env,
+        num_episodes=int(sys.argv[2]),
+        gamma=float(sys.argv[3]),
+        epsilon=float(sys.argv[4]),
+    )
     env.autoplay(policy)
     env.root.mainloop()
