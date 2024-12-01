@@ -19,6 +19,7 @@ class CriticNetwork(nn.Module):
 def actor_critic_policy_gradient(
     env, num_episodes=1000, gamma=0.99, lr_actor=1e-3, lr_critic=1e-3
 ):
+    print("Running Actor-Critic algorithm...")
     input_dim = env.observation_space.shape[0]
     output_dim = env.action_space.n
 
@@ -105,6 +106,8 @@ def actor_critic_policy_gradient(
             f"Episode {episode + 1}/{num_episodes}, Total Reward: {total_reward:.2f}, Best Reward: {best_reward:.2f}"
         )
 
+    print("Total number of episodes: " + str(episode + 1))
+    print("Actor-Critic algorithm completed.")
     return best_policy, all_rewards
 
 

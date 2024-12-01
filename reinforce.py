@@ -21,6 +21,7 @@ class PolicyNetwork(nn.Module):
 
 
 def reinforce_policy_gradient(env, num_episodes=1000, gamma=0.99, lr=1e-3):
+    print("Running REINFORCE algorithm...")
     input_dim = env.observation_space.shape[0]
     output_dim = env.action_space.n
 
@@ -92,6 +93,8 @@ def reinforce_policy_gradient(env, num_episodes=1000, gamma=0.99, lr=1e-3):
             f"Episode {episode + 1}/{num_episodes}, Total Reward: {total_reward:.2f}, Best Reward: {best_reward:.2f}"
         )
 
+    print("Total number of episodes: " + str(episode + 1))
+    print("REINFORCE algorithm completed.")
     return best_policy, all_rewards
 
 

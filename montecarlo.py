@@ -66,7 +66,7 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.99, epsilon=0.9):
             policy[state] = best_action
 
     print("Total number of episodes: " + str(episode + 1))
-    print("Monte Carlo policy optimization completed.")
+    print("Monte Carlo policy optimization algorithm completed.")
     return policy
 
 
