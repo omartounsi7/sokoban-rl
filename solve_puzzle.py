@@ -3,9 +3,9 @@ import os
 import time
 import psutil
 from src.SokobanEnv import SokobanEnv
-from montecarlo import mc_policy_evaluation
-from reinforce import reinforce_policy_gradient
-from actorcritic import actor_critic_policy_gradient
+from src.montecarlo import mc_policy_evaluation
+from src.reinforce import reinforce_policy_gradient
+from src.actorcritic import actor_critic_policy_gradient
 
 def main():
     if len(sys.argv) != 3:

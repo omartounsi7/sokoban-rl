@@ -13,3 +13,17 @@ python solve_puzzle.py <puzzle_file> <algorithm>
 ```
 
 Algorithms: monte_carlo, reinforce, actor_critic
+
+Examples:
+
+```bash
+python .\solve_puzzle.py .\data\puzzles\level_1.txt monte_carlo
+```
+
+```bash
+python .\solve_puzzle.py .\data\puzzles\level_2.txt reinforce
+```
+
+```bash
+python .\solve_puzzle.py .\data\puzzles\level_3.txt actor_critic
+```

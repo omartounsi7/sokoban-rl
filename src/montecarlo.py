@@ -7,7 +7,7 @@ from src.SokobanEnv import SokobanEnv
 from src.constants import *
 
 
-def mc_policy_evaluation(env, num_episodes=MAX_EPISODES, gamma=GAMMA, epsilon=EPSILON):
+def mc_policy_evaluation(env, num_episodes=MAX_EPISODES_MC, gamma=GAMMA, epsilon=EPSILON):
     print("Running Monte Carlo policy optimization algorithm...")
     Q = {}
     returns_sum = {}

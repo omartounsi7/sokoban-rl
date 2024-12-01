@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.optim as optim
 from src.SokobanEnv import SokobanEnv
 from src.constants import *
-from reinforce import PolicyNetwork
+from src.reinforce import PolicyNetwork
 
 
 class CriticNetwork(nn.Module):
@@ -19,7 +19,7 @@ class CriticNetwork(nn.Module):
         return self.fc(x)
 
 
-def actor_critic_policy_gradient(env, num_episodes=MAX_EPISODES, gamma=GAMMA, lr_actor=LEARNING_RATE, lr_critic=LEARNING_RATE):
+def actor_critic_policy_gradient(env, num_episodes=MAX_EPISODES_PG, gamma=GAMMA, lr_actor=LEARNING_RATE, lr_critic=LEARNING_RATE):
     print("Running Actor-Critic algorithm...")
     input_dim = env.observation_space.shape[0]
     output_dim = env.action_space.n
