@@ -48,7 +48,7 @@ class SokobanEnv(gym.Env):
         return self.get_observation()
     
     def get_observation(self):
-        obs = np.zeros((self.height, self.width), dtype=np.float32) # dtype of reset and observation space mismatch
+        obs = np.zeros((self.height, self.width), dtype=np.int8)
         for y, row in enumerate(self.level):
             for x, cell in enumerate(row):
                 obs[y][x] = self.cell_types.get(cell, 0)
