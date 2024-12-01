@@ -7,14 +7,7 @@ import random
 import copy
 
 
-def mc_policy_evaluation(
-    env,
-    num_episodes=100000,
-    gamma=0.95,
-    epsilon=0.9,
-    convergence_thres=0,
-    every_visit=True,
-):
+def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, convergence_thres=0, every_visit=True):
     print("Running Monte Carlo policy optimization algorithm...")
     start_time = time.time()
     Q = {}
@@ -29,7 +22,7 @@ def mc_policy_evaluation(
         trajectory = []
         terminalState = False
         visited_states = set()
-        current_state = src.util.serialize_state(env.reset())
+        current_state = tuple(env.reset())
 
         while not terminalState:
             visited_states.add(current_state)
@@ -39,10 +32,10 @@ def mc_policy_evaluation(
                 action = random.choice(action_space)
             else:
                 action = policy.get(current_state, random.choice(action_space))
-
+            
             obs, reward, terminated, truncated, info = env.step(action)
-            serialized_obs = src.util.serialize_state(obs)
-
+            serialized_obs = tuple(obs)
+            
             if serialized_obs in visited_states:
                 # print("LOOP DETECTED!")
                 trajectory.append((current_state, action, SUPERMALUS))
@@ -72,9 +65,7 @@ def mc_policy_evaluation(
                     G += gamma ** (k - t) * reward_k
                 returns_sum[state][action] += G
                 returns_count[state][action] += 1
-                Q[state][action] = (
-                    returns_sum[state][action] / returns_count[state][action]
-                )
+                Q[state][action] = returns_sum[state][action] / returns_count[state][action]
                 best_action = max(Q[state], key=Q[state].get)
                 policy[state] = best_action
 
@@ -88,12 +79,12 @@ def mc_policy_evaluation(
     print("Monte Carlo policy optimization completed.")
     return policy
 
-
 def has_converged(Q_old, Q_new, threshold):
-    max_diff = 0
+    max_diff = 0 
     for state in Q_old:
         if state not in Q_new:
-            continue
+            continue 
+
         action_old = max(Q_old[state], key=Q_old[state].get)
         action_new = max(Q_new[state], key=Q_new[state].get)
         if action_old != action_new:
@@ -102,7 +93,8 @@ def has_converged(Q_old, Q_new, threshold):
             if action not in Q_new[state]:
                 continue
             diff = abs(Q_old[state][action] - Q_new[state][action])
-            max_diff = max(max_diff, diff)
+            max_diff = max(max_diff, diff) 
+
     return max_diff < threshold
 
 

@@ -13,9 +13,7 @@ class SokobanEnv(gym.Env):
         self.level_file = level_file
         self.load_level()
         self.action_space = gym.spaces.Discrete(4)  # 0: Up, 1: Left, 2: Down, 3: Right
-        self.observation_space = gym.spaces.Box(
-            low=0, high=6, shape=(self.height * self.width,), dtype=np.int8
-        )
+        self.observation_space = gym.spaces.Box(low=0, high=6, shape=(self.height * self.width,), dtype=np.int8)
         self.cell_types = {
             " ": 0,  # Empty space
             "#": 1,  # Wall
@@ -87,9 +85,9 @@ class SokobanEnv(gym.Env):
                 self.game_over = True
             elif src.util.is_box_placed(self.level, bx, by):
                 reward = BONUS
-
+        
         return self.get_observation(), reward, self.game_over, False, {}
-
+    
     def render(self):
         if self.root is None:
             self.init_viewer()
