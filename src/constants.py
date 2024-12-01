@@ -1,18 +1,19 @@
+TILESIZE = 40
+XOFFSET = 50
+YOFFSET = 25
 SUPERMALUS = -100
 MALUS = -1
 STEPREWARD = 0
 BONUS = 1
 SUPERBONUS = 100
-MAXSTEPS = 100000
+MINEPSILON = 0.1
 EPSILONDECAY = 0.995
-ACTIONSPACE = ['up', 'left', 'down', 'right']
-KEYMAPPING = {
-    "w": (0, -1),
-    "a": (-1, 0),
-    "s": (0, 1),
-    "d": (1, 0),
-    "up": (0, -1),
-    "left": (-1, 0),
-    "down": (0, 1),
-    "right": (1, 0),
+MINEPISODES = 1000
+ACTIONSPACE = {0: "Up", 1: "Left", 2: "Down", 3: "Right"}
+ACTIONMAP = {
+    0: (0, -1),   # Up
+    1: (-1, 0),   # Left
+    2: (0, 1),    # Down
+    3: (1, 0)     # Right
 }
+WAITTIME = 500 # in milliseconds
