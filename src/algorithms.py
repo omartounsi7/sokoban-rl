@@ -4,7 +4,6 @@ import time
 import random
 import copy
 
-
 def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, convergence_thres=0, every_visit=True):
     print("Running Monte Carlo policy optimization algorithm...")
     start_time = time.time()

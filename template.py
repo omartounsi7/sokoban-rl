@@ -2,8 +2,7 @@
 
 import gym
 from gym.envs.registration import register
-
-import time
+from ray.rllib.algorithms.cql import CQLConfig
 
 register(
     id='SokobanEnv-v0',
