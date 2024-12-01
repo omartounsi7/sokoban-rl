@@ -23,7 +23,7 @@ class PolicyNetwork(nn.Module):
         return self.fc(x)
 
 
-def reinforce_policy_gradient(env, num_episodes=1000, gamma=0.99, lr=1e-3):
+def reinforce_policy_gradient(env, num_episodes=MAX_EPISODES, gamma=GAMMA, lr=LEARNING_RATE):
     print("Running REINFORCE algorithm...")
     input_dim = env.observation_space.shape[0]
     output_dim = env.action_space.n

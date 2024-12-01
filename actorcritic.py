@@ -19,7 +19,7 @@ class CriticNetwork(nn.Module):
         return self.fc(x)
 
 
-def actor_critic_policy_gradient(env, num_episodes=1000, gamma=0.99, lr_actor=1e-3, lr_critic=1e-3):
+def actor_critic_policy_gradient(env, num_episodes=MAX_EPISODES, gamma=GAMMA, lr_actor=LEARNING_RATE, lr_critic=LEARNING_RATE):
     print("Running Actor-Critic algorithm...")
     input_dim = env.observation_space.shape[0]
     output_dim = env.action_space.n
