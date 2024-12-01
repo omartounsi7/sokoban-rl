@@ -1,6 +1,34 @@
 import itertools
 from src.constants import *
 
+def compute_v_and_q_from_policy(env, policy_actions, gamma):
+    # policy_actions should be numeric
+    # e.g. [0, 1, 2, 3] not ['up', 'left', 'down', 'right']
+    # Note that this function only returns the V and Q values for the states visited in the inputted policy.
+    V = {}
+    Q = {}
+
+    state = env.reset()
+    trajectory = []
+
+    for action in policy_actions:
+        serialized_state = tuple(state)
+        next_state, reward, done, truncated, _ = env.step(action)
+        trajectory.append((serialized_state, action, reward))
+        state = next_state
+        if done or truncated:
+            break
+
+    G = 0
+    for serialized_state, action, reward in reversed(trajectory):
+        G = reward + gamma * G
+        V[serialized_state] = G
+        if serialized_state not in Q:
+            Q[serialized_state] = {}
+        Q[serialized_state][action] = G
+
+    return V, Q
+
 def find_player_in_state(state):
     for y, row in enumerate(state):
         for x, cell in enumerate(row):
