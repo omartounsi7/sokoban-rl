@@ -5,7 +5,7 @@ This project applies Reinforcement Learning algorithms to solve Sokoban puzzles.
 - Monte Carlo Policy Optimization (Every Visit)
 
 ```bash
-python .\montecarlo.py <puzzle_file> <number_of_episodes> <discount_factor> <exploration_rate>
+python .\montecarlo.py <puzzle_file> <number_of_episodes>
 ```
 
 - REINFORCE

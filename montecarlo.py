@@ -71,14 +71,13 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.99, epsilon=0.9):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 5:
+    if len(sys.argv) != 3:
         print(
-            "Usage: python montecarlo.py <puzzle_file> <number_of_episodes> <discount_factor> <exploration_rate>"
+            "Usage: python montecarlo.py <puzzle_file> <number_of_episodes>"
         )
         sys.exit(1)
 
-    level_file = sys.argv[1]
-    env = SokobanEnv(level_file)
+    env = SokobanEnv(sys.argv[1])
 
     start_time = time.time()
     process = psutil.Process(os.getpid())
@@ -86,13 +85,12 @@ if __name__ == "__main__":
 
     policy = mc_policy_evaluation(
         env,
-        num_episodes=int(sys.argv[2]),
-        gamma=float(sys.argv[3]),
-        epsilon=float(sys.argv[4])
+        num_episodes=int(sys.argv[2])
     )
 
     after = process.memory_info().rss / 1024 / 1024
     time_to_train = time.time() - start_time
+    
     print(f"Time to train: {time_to_train:.2f}s")
     print(f"Total memory used: {after - before:.2f} MB")
 
