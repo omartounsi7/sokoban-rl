@@ -12,7 +12,7 @@ class SokobanEnv(gym.Env):
         self.level_file = level_file
         self.load_level()
         self.action_space = gym.spaces.Discrete(4)  # 0: Up, 1: Left, 2: Down, 3: Right
-        self.observation_space = gym.spaces.Box(low=0, high=6, shape=(self.height, self.width), dtype=np.int8)
+        self.observation_space = gym.spaces.Box(low=np.float32(0.0), high=np.float32(6.0), shape=(self.height, self.width), dtype=np.float32)
         self.cell_types = {
             ' ': 0,   # Empty space
             '#': 1,   # Wall
@@ -48,11 +48,11 @@ class SokobanEnv(gym.Env):
         return self.get_observation()
     
     def get_observation(self):
-        obs = np.zeros((self.height, self.width), dtype=np.int8)
+        obs = np.zeros((self.height, self.width), dtype=np.float32) # dtype of reset and observation space mismatch
         for y, row in enumerate(self.level):
             for x, cell in enumerate(row):
                 obs[y][x] = self.cell_types.get(cell, 0)
-        return obs
+        return obs #2d array
     
     def step(self, action):
         dx, dy = ACTIONMAP[action]
