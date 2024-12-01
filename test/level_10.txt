@@ -8,5 +8,3 @@
 ####  #
 ####@ #
 #######
-
-['right', 'up', 'up', 'up', 'right', 'up', 'up', 'left', 'down', 'left', 'left', 'right', 'right', 'down', 'down', 'left', 'left', 'left', 'up', 'up', 'up', 'up', 'left', 'up', 'right', 'down', 'down', 'down', 'right', 'right', 'right', 'right', 'up', 'right', 'right', 'down', 'left', 'left', 'left', 'left', 'left', 'right', 'right', 'down', 'down', 'left', 'left', 'left', 'up', 'up', 'up', 'up', 'down', 'down', 'right', 'right', 'right', 'up', 'up', 'up', 'right', 'down', 'down', 'right', 'down', 'left', 'left', 'left', 'left', 'right', 'right', 'down', 'down', 'left', 'left', 'left', 'up', 'up', 'up', 'left', 'up', 'right', 'down', 'down', 'down', 'down', 'right', 'right', 'down', 'down', 'right', 'up', 'up', 'up', 'right', 'up', 'left', 'left', 'left', 'right', 'right', 'down', 'down', 'left', 'left', 'left', 'up', 'up', 'up']

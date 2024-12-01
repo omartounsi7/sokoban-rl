@@ -1,0 +1,1 @@
+['left', 'left', 'up', 'right', 'down', 'right', 'up', 'left', 'left', 'up', 'up', 'up', 'up', 'down', 'down', 'left', 'left', 'up', 'right', 'right', 'up', 'right', 'right', 'up', 'up', 'left', 'down', 'up', 'left', 'down', 'down', 'down', 'left', 'down', 'right', 'up', 'up', 'right']

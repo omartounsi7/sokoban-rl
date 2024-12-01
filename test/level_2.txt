@@ -3,6 +3,4 @@
 #  $$.  #
 #       #
 ######  #
-     ####
-
-['right', 'right', 'down', 'right', 'left', 'left', 'down', 'right', 'right', 'right', 'right', 'down', 'right', 'up', 'up']
+#########

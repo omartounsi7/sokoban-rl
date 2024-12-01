@@ -4,5 +4,3 @@
 #@$    $##
 ######  ##
 ##########
-
-['right', 'right', 'left', 'left', 'up', 'right', 'down', 'right', 'up', 'down', 'right', 'up', 'right', 'right', 'up', 'right', 'right', 'down', 'left', 'left', 'left', 'right', 'down', 'down', 'right', 'up', 'up', 'left', 'up', 'right', 'down', 'left', 'left', 'left', 'down', 'right', 'up', 'right', 'right', 'down', 'down', 'left', 'up', 'right', 'up', 'left', 'down', 'left', 'left', 'left', 'left', 'up', 'right']
