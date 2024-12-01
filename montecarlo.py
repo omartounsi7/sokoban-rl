@@ -1,13 +1,14 @@
 import sys
 import time
 import random
+import psutil
+import os
 from src.SokobanEnv import SokobanEnv
 from src.constants import *
 
 
 def mc_policy_evaluation(env, num_episodes=100000, gamma=0.99, epsilon=0.9):
     print("Running Monte Carlo policy optimization algorithm...")
-    start_time = time.time()
     Q = {}
     returns_sum = {}
     returns_count = {}
@@ -16,7 +17,7 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.99, epsilon=0.9):
 
     for episode in range(num_episodes):
         if (episode + 1) % 100 == 0:
-            print("Episode " + str(episode + 1) +"/" + str(num_episodes))
+            print("Episode " + str(episode + 1) + "/" + str(num_episodes))
         trajectory = []
         terminalState = False
         visited_states = set()
@@ -64,8 +65,6 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.99, epsilon=0.9):
             best_action = max(Q[state], key=Q[state].get)
             policy[state] = best_action
 
-    time_to_train = time.time() - start_time
-    print(f"Time to train: {time_to_train:.2f}s")
     print("Total number of episodes: " + str(episode + 1))
     print("Monte Carlo policy optimization completed.")
     return policy
@@ -80,11 +79,22 @@ if __name__ == "__main__":
 
     level_file = sys.argv[1]
     env = SokobanEnv(level_file)
+
+    start_time = time.time()
+    process = psutil.Process(os.getpid())
+    before = process.memory_info().rss / 1024 / 1024
+
     policy = mc_policy_evaluation(
         env,
         num_episodes=int(sys.argv[2]),
         gamma=float(sys.argv[3]),
         epsilon=float(sys.argv[4])
     )
+
+    after = process.memory_info().rss / 1024 / 1024
+    time_to_train = time.time() - start_time
+    print(f"Time to train: {time_to_train:.2f}s")
+    print(f"Total memory used: {after - before:.2f} MB")
+
     env.autoplay(policy)
     env.root.mainloop()
