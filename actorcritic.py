@@ -1,4 +1,7 @@
 import sys
+import time
+import psutil
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -16,9 +19,7 @@ class CriticNetwork(nn.Module):
         return self.fc(x)
 
 
-def actor_critic_policy_gradient(
-    env, num_episodes=1000, gamma=0.99, lr_actor=1e-3, lr_critic=1e-3
-):
+def actor_critic_policy_gradient(env, num_episodes=1000, gamma=0.99, lr_actor=1e-3, lr_critic=1e-3):
     print("Running Actor-Critic algorithm...")
     input_dim = env.observation_space.shape[0]
     output_dim = env.action_space.n
@@ -119,6 +120,18 @@ if __name__ == "__main__":
     level_file = sys.argv[1]
     num_episodes = int(sys.argv[2])
     env = SokobanEnv(level_file)
+
+    start_time = time.time()
+    process = psutil.Process(os.getpid())
+    before = process.memory_info().rss / 1024 / 1024
+
     policy, rewards = actor_critic_policy_gradient(env, num_episodes=num_episodes)
+
+    after = process.memory_info().rss / 1024 / 1024
+    time_to_train = time.time() - start_time
+    
+    print(f"Time to train: {time_to_train:.2f}s")
+    print(f"Total memory used: {after - before:.2f} MB")
+
     env.autoplay(policy)
     env.root.mainloop()

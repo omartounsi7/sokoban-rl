@@ -1,8 +1,8 @@
 import sys
 import time
-import random
 import psutil
 import os
+import random
 from src.SokobanEnv import SokobanEnv
 from src.constants import *
 
@@ -77,7 +77,9 @@ if __name__ == "__main__":
         )
         sys.exit(1)
 
-    env = SokobanEnv(sys.argv[1])
+    level_file = sys.argv[1]
+    num_episodes = int(sys.argv[2])
+    env = SokobanEnv(level_file)
 
     start_time = time.time()
     process = psutil.Process(os.getpid())
@@ -85,7 +87,7 @@ if __name__ == "__main__":
 
     policy = mc_policy_evaluation(
         env,
-        num_episodes=int(sys.argv[2])
+        num_episodes=num_episodes
     )
 
     after = process.memory_info().rss / 1024 / 1024
