@@ -7,7 +7,7 @@ import random
 import copy
 
 
-def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, convergence_thres=0, every_visit=True):
+def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, convergence_thres=0):
     print("Running Monte Carlo policy optimization algorithm...")
     start_time = time.time()
     Q = {}
@@ -50,25 +50,22 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, conv
                 current_state = serialized_obs
 
         episode_length = len(trajectory)
-        visited_state_actions = set()
 
         for t in range(episode_length):
             state, action, reward = trajectory[t]
-            if every_visit or (state, action) not in visited_state_actions:
-                visited_state_actions.add((state, action))
-                if state not in Q:
-                    Q[state] = {a: 0.0 for a in action_space}
-                    returns_sum[state] = {a: 0.0 for a in action_space}
-                    returns_count[state] = {a: 0 for a in action_space}
-                G = 0
-                for k in range(t, episode_length):
-                    state_k, action_k, reward_k = trajectory[k]
-                    G += gamma ** (k - t) * reward_k
-                returns_sum[state][action] += G
-                returns_count[state][action] += 1
-                Q[state][action] = returns_sum[state][action] / returns_count[state][action]
-                best_action = max(Q[state], key=Q[state].get)
-                policy[state] = best_action
+            if state not in Q:
+                Q[state] = {a: 0.0 for a in action_space}
+                returns_sum[state] = {a: 0.0 for a in action_space}
+                returns_count[state] = {a: 0 for a in action_space}
+            G = 0
+            for k in range(t, episode_length):
+                state_k, action_k, reward_k = trajectory[k]
+                G += gamma ** (k - t) * reward_k
+            returns_sum[state][action] += G
+            returns_count[state][action] += 1
+            Q[state][action] = returns_sum[state][action] / returns_count[state][action]
+            best_action = max(Q[state], key=Q[state].get)
+            policy[state] = best_action
 
         if episode > MINEPISODES and has_converged(Q_old, Q, convergence_thres):
             print("Q has converged.")
@@ -79,8 +76,6 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, conv
     print("Total number of episodes: " + str(episode + 1))
     print("Monte Carlo policy optimization completed.")
     return policy
-
-
 
 
 if __name__ == "__main__":
@@ -96,7 +91,7 @@ if __name__ == "__main__":
         env,
         num_episodes=int(sys.argv[2]),
         gamma=float(sys.argv[3]),
-        epsilon=float(sys.argv[4]),
+        epsilon=float(sys.argv[4])
     )
     env.autoplay(policy)
     env.root.mainloop()
