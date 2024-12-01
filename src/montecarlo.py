@@ -80,7 +80,8 @@ def mc_policy_evaluation(env, num_episodes=MAX_EPISODES_MC, gamma=GAMMA, epsilon
         else:
             no_policy_change_ctr = 0
 
-    print("Total number of episodes: " + str(episode + 1))
+    if episode != num_episodes:
+        print("Number of episodes to converge: " + str(episode + 1))
     print("Monte Carlo policy optimization algorithm completed.")
     return policy
 

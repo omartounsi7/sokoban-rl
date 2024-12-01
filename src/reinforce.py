@@ -100,7 +100,8 @@ def reinforce_policy_gradient(env, num_episodes=MAX_EPISODES_PG, gamma=GAMMA, lr
         if best_reward > BEST_REWARD_THRESHOLD:
             break
 
-    print("Total number of episodes: " + str(episode + 1))
+    if episode != num_episodes:
+        print("Number of episodes to converge: " + str(episode + 1))
     print("REINFORCE algorithm completed.")
     return best_policy, all_rewards
 
