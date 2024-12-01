@@ -1,13 +1,11 @@
 import sys
-from src.SokobanEnv import SokobanEnv
-from src.constants import *
-from src.util import has_converged
 import time
 import random
-import copy
+from src.SokobanEnv import SokobanEnv
+from src.constants import *
 
 
-def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, convergence_thres=0):
+def mc_policy_evaluation(env, num_episodes=100000, gamma=0.99, epsilon=0.9):
     print("Running Monte Carlo policy optimization algorithm...")
     start_time = time.time()
     Q = {}
@@ -19,7 +17,6 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, conv
     for episode in range(num_episodes):
         if (episode + 1) % 100 == 0:
             print("Episode " + str(episode + 1) +"/" + str(num_episodes))
-        Q_old = copy.deepcopy(Q)
         trajectory = []
         terminalState = False
         visited_states = set()
@@ -66,10 +63,6 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, conv
             Q[state][action] = returns_sum[state][action] / returns_count[state][action]
             best_action = max(Q[state], key=Q[state].get)
             policy[state] = best_action
-
-        if episode > MINEPISODES and has_converged(Q_old, Q, convergence_thres):
-            print("Q has converged.")
-            break
 
     time_to_train = time.time() - start_time
     print(f"Time to train: {time_to_train:.2f}s")
