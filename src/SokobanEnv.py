@@ -14,7 +14,7 @@ class SokobanEnv(gym.Env):
         self.load_level()
         self.action_space = gym.spaces.Discrete(4)  # 0: Up, 1: Left, 2: Down, 3: Right
         self.observation_space = gym.spaces.Box(
-            low=0, high=6, shape=(self.height, self.width), dtype=np.int8
+            low=0, high=6, shape=(self.height * self.width,), dtype=np.int8
         )
         self.cell_types = {
             " ": 0,  # Empty space
@@ -55,7 +55,7 @@ class SokobanEnv(gym.Env):
         for y, row in enumerate(self.level):
             for x, cell in enumerate(row):
                 obs[y][x] = self.cell_types.get(cell, 0)
-        return obs
+        return obs.flatten()
 
     def step(self, action):
         dx, dy = ACTIONMAP[action]
@@ -174,7 +174,7 @@ class SokobanEnv(gym.Env):
             self.done = False
             self.action_sequence = []
         elif not self.done:
-            state = src.util.serialize_state(self.obs)
+            state = tuple(self.obs)
             action = self.policy.get(state, self.action_space.sample())
             self.obs, reward, self.done, truncated, info = self.step(action)
             self.action_sequence.append(action)

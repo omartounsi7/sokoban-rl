@@ -20,6 +20,7 @@ class PolicyNetwork(nn.Module):
     def forward(self, x):
         return self.fc(x)
 
+
 class CriticNetwork(nn.Module):
     def __init__(self, input_dim):
         super(CriticNetwork, self).__init__()
@@ -27,10 +28,12 @@ class CriticNetwork(nn.Module):
 
     def forward(self, x):
         return self.fc(x)
-    
+
+
 def reinforce_policy_gradient(env, num_episodes=1000, gamma=0.99, lr=1e-3):
-    input_dim = env.observation_space.shape[0] * env.observation_space.shape[1]
-    output_dim = len(ACTIONSPACE)
+    input_dim = env.observation_space.shape[0]
+    output_dim = env.action_space.n
+
     policy_net = PolicyNetwork(input_dim, output_dim)
     optimizer = optim.Adam(policy_net.parameters(), lr=lr)
 
@@ -41,29 +44,31 @@ def reinforce_policy_gradient(env, num_episodes=1000, gamma=0.99, lr=1e-3):
 
     for episode in range(num_episodes):
         state = env.reset()
-        state_serialized = src.util.serialize_state(state)
-        state_tensor = torch.tensor(state.flatten(), dtype=torch.float32)
+        state_tensor = torch.tensor(state, dtype=torch.float32)
         log_probs = []
         rewards = []
         trajectory = []
+        visited = set()
 
         done = False
-        truncated = False
-        while not done and not truncated:
+        while not done:
+            visited.add(tuple(state))
             action_probs = policy_net(state_tensor)
             action_dist = torch.distributions.Categorical(action_probs)
             action = action_dist.sample()
 
             next_state, reward, done, truncated, _ = env.step(action.item())
-            next_state_serialized = src.util.serialize_state(next_state)
-            next_state_tensor = torch.tensor(next_state.flatten(), dtype=torch.float32)
+            next_state_tensor = torch.tensor(next_state, dtype=torch.float32)
+
+            if tuple(next_state) in visited:
+                reward += SUPERMALUS
 
             log_probs.append(action_dist.log_prob(action))
             rewards.append(reward)
-            trajectory.append((state_serialized, action.item()))
+            trajectory.append((tuple(state), action.item()))
 
-            state_serialized = next_state_serialized
             state_tensor = next_state_tensor
+            state = next_state
 
         discounted_returns = []
         G = 0
@@ -102,9 +107,7 @@ def reinforce_policy_gradient(env, num_episodes=1000, gamma=0.99, lr=1e-3):
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print(
-            "Usage: python reinforce.py <puzzle_file> <number_of_episodes>"
-        )
+        print("Usage: python reinforce.py <puzzle_file> <number_of_episodes>")
         sys.exit(1)
 
     level_file = sys.argv[1]

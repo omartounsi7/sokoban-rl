@@ -5,14 +5,36 @@ import torch.optim as optim
 from src.SokobanEnv import SokobanEnv
 from src.constants import *
 import src.util
-from reinforce import PolicyNetwork, CriticNetwork
+
+
+class PolicyNetwork(nn.Module):
+    def __init__(self, input_dim, output_dim):
+        super(PolicyNetwork, self).__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(input_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, output_dim),
+            nn.Softmax(dim=-1),
+        )
+
+    def forward(self, x):
+        return self.fc(x)
+
+
+class CriticNetwork(nn.Module):
+    def __init__(self, input_dim):
+        super(CriticNetwork, self).__init__()
+        self.fc = nn.Sequential(nn.Linear(input_dim, 128), nn.ReLU(), nn.Linear(128, 1))
+
+    def forward(self, x):
+        return self.fc(x)
 
 
 def actor_critic_policy_gradient(
     env, num_episodes=1000, gamma=0.99, lr_actor=1e-3, lr_critic=1e-3
 ):
-    input_dim = env.observation_space.shape[0] * env.observation_space.shape[1]
-    output_dim = len(ACTIONSPACE)
+    input_dim = env.observation_space.shape[0]
+    output_dim = env.action_space.n
 
     actor_net = PolicyNetwork(input_dim, output_dim)
     critic_net = CriticNetwork(input_dim)
@@ -27,16 +49,16 @@ def actor_critic_policy_gradient(
 
     for episode in range(num_episodes):
         state = env.reset()
-        state_serialized = src.util.serialize_state(state)
-        state_tensor = torch.tensor(state.flatten(), dtype=torch.float32)
+        state_tensor = torch.tensor(state, dtype=torch.float32)
         log_probs = []
         rewards = []
         values = []
         trajectory = []
+        visited = set()
 
         done = False
-        truncated = False
-        while not done and not truncated:
+        while not done:
+            visited.add(tuple(state))
             action_probs = actor_net(state_tensor)
             action_dist = torch.distributions.Categorical(action_probs)
             action = action_dist.sample()
@@ -45,14 +67,16 @@ def actor_critic_policy_gradient(
             values.append(value)
 
             next_state, reward, done, truncated, _ = env.step(action.item())
-            next_state_serialized = src.util.serialize_state(next_state)
-            next_state_tensor = torch.tensor(next_state.flatten(), dtype=torch.float32)
+            next_state_tensor = torch.tensor(next_state, dtype=torch.float32)
+
+            if tuple(next_state) in visited:
+                reward += SUPERMALUS
 
             log_probs.append(action_dist.log_prob(action))
             rewards.append(reward)
-            trajectory.append((state_serialized, action.item()))
+            trajectory.append((tuple(state), action.item()))
 
-            state_serialized = next_state_serialized
+            state = next_state
             state_tensor = next_state_tensor
 
         discounted_returns = []
@@ -100,9 +124,7 @@ def actor_critic_policy_gradient(
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print(
-            "Usage: python actorcritic.py <puzzle_file> <number_of_episodes>"
-        )
+        print("Usage: python actorcritic.py <puzzle_file> <number_of_episodes>")
         sys.exit(1)
 
     level_file = sys.argv[1]
@@ -111,5 +133,3 @@ if __name__ == "__main__":
     policy, rewards = actor_critic_policy_gradient(env, num_episodes=num_episodes)
     env.autoplay(policy)
     env.root.mainloop()
-
-    # torch.save(policy.state_dict(), "sokoban_policy_net.pth")
