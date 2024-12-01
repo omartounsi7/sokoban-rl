@@ -1,6 +1,25 @@
 import itertools
 from src.constants import *
 
+
+def has_converged(Q_old, Q_new, threshold):
+    max_diff = 0 
+    for state in Q_old:
+        if state not in Q_new:
+            continue 
+
+        action_old = max(Q_old[state], key=Q_old[state].get)
+        action_new = max(Q_new[state], key=Q_new[state].get)
+        if action_old != action_new:
+            return False
+        for action in Q_old[state]:
+            if action not in Q_new[state]:
+                continue
+            diff = abs(Q_old[state][action] - Q_new[state][action])
+            max_diff = max(max_diff, diff) 
+
+    return max_diff < threshold
+
 def compute_v_and_q_from_policy(env, policy_actions, gamma):
     # policy_actions should be numeric
     # e.g. [0, 1, 2, 3] not ['up', 'left', 'down', 'right']

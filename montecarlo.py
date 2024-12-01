@@ -1,7 +1,7 @@
 import sys
 from src.SokobanEnv import SokobanEnv
 from src.constants import *
-import src.util
+from src.util import has_converged
 import time
 import random
 import copy
@@ -80,23 +80,7 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, conv
     print("Monte Carlo policy optimization completed.")
     return policy
 
-def has_converged(Q_old, Q_new, threshold):
-    max_diff = 0 
-    for state in Q_old:
-        if state not in Q_new:
-            continue 
 
-        action_old = max(Q_old[state], key=Q_old[state].get)
-        action_new = max(Q_new[state], key=Q_new[state].get)
-        if action_old != action_new:
-            return False
-        for action in Q_old[state]:
-            if action not in Q_new[state]:
-                continue
-            diff = abs(Q_old[state][action] - Q_new[state][action])
-            max_diff = max(max_diff, diff) 
-
-    return max_diff < threshold
 
 
 if __name__ == "__main__":
