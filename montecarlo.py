@@ -17,7 +17,8 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.95, epsilon=0.9, conv
     action_space = list(ACTIONSPACE.keys())
 
     for episode in range(num_episodes):
-        # print("Episode " + str(episode + 1))
+        if (episode + 1) % 100 == 0:
+            print("Episode " + str(episode + 1) +"/" + str(num_episodes))
         Q_old = copy.deepcopy(Q)
         trajectory = []
         terminalState = False
