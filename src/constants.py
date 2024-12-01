@@ -1,20 +1,21 @@
-TILESIZE = 40
-XOFFSET = 50
-YOFFSET = 25
+TILE_SIZE = 40
+X_OFFSET = 50
+Y_OFFSET = 25
 SUPERMALUS = -10
 MALUS = -1
-STEPREWARD = 0
+STEP_REWARD = 0
 BONUS = 10
 SUPERBONUS = 100
-MINEPSILON = 0.1
-EPSILONDECAY = 0.995
-MINEPISODES = 1000
-ACTIONSPACE = {0: "up", 1: "left", 2: "down", 3: "right"}
-NUMERIC_ACTION_SPACE= {v: k for k, v in ACTIONSPACE.items()} # don't remove this
-ACTIONMAP = {
+MIN_EPSILON = 0.1
+EPSILON_DECAY = 0.995
+MIN_EPISODES = 1000
+ACTION_SPACE = {0: "up", 1: "left", 2: "down", 3: "right"}
+NUMERIC_ACTION_SPACE= {v: k for k, v in ACTION_SPACE.items()} # don't remove this
+ACTION_MAP = {
     0: (0, -1),  # Up
     1: (-1, 0),  # Left
     2: (0, 1),  # Down
     3: (1, 0),  # Right
 }
-WAITTIME = 500  # in milliseconds
+WAIT_TIME = 500  # in milliseconds
+EARLY_STOPPING_PATIENCE = 1000

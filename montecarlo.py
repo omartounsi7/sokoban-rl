@@ -13,7 +13,7 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.99, epsilon=0.9):
     returns_sum = {}
     returns_count = {}
     policy = {}
-    action_space = list(ACTIONSPACE.keys())
+    action_space = list(ACTION_SPACE.keys())
 
     for episode in range(num_episodes):
         if (episode + 1) % 100 == 0:
@@ -25,7 +25,7 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.99, epsilon=0.9):
 
         while not terminalState:
             visited_states.add(current_state)
-            epsilon = max(MINEPSILON, epsilon * EPSILONDECAY)
+            epsilon = max(MIN_EPSILON, epsilon * EPSILON_DECAY)
 
             if random.random() < epsilon:
                 action = random.choice(action_space)

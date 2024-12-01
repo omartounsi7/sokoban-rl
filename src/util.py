@@ -71,7 +71,7 @@ def is_box_stuck(state, x, y):
     if is_box_placed(state, x, y):
         return False
     
-    dirs = list(ACTIONMAP.values())
+    dirs = list(ACTION_MAP.values())
 
     for i in range(4):
         dx1, dy1 = dirs[i]
