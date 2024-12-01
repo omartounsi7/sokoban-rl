@@ -1,9 +1,6 @@
 import itertools
 from src.constants import *
 
-def serialize_state(state):
-    return tuple(map(tuple, state))
-
 def find_player_in_state(state):
     for y, row in enumerate(state):
         for x, cell in enumerate(row):

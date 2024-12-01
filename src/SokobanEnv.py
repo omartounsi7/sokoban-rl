@@ -12,7 +12,7 @@ class SokobanEnv(gym.Env):
         self.level_file = level_file
         self.load_level()
         self.action_space = gym.spaces.Discrete(4)  # 0: Up, 1: Left, 2: Down, 3: Right
-        self.observation_space = gym.spaces.Box(low=np.float32(0.0), high=np.float32(6.0), shape=(self.height, self.width), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=0, high=6, shape=(self.height * self.width,), dtype=np.int8)
         self.cell_types = {
             ' ': 0,   # Empty space
             '#': 1,   # Wall
@@ -52,8 +52,8 @@ class SokobanEnv(gym.Env):
         for y, row in enumerate(self.level):
             for x, cell in enumerate(row):
                 obs[y][x] = self.cell_types.get(cell, 0)
-        return obs #2d array
-    
+        return obs.flatten()
+
     def step(self, action):
         dx, dy = ACTIONMAP[action]
         
@@ -63,11 +63,11 @@ class SokobanEnv(gym.Env):
         nx, ny = x + dx, y + dy
         
         if src.util.is_wall(self.level, nx, ny):
-            return self.get_observation(), reward, self.game_over, {}
+            return self.get_observation(), reward, self.game_over, False, {}
         
         if src.util.is_box(self.level, nx, ny):
             if not src.util.move_box(self.level, nx, ny, dx, dy):
-                return self.get_observation(), reward, self.game_over, {}
+                return self.get_observation(), reward, self.game_over, False, {}
             moved_box = True
         
         src.util.move_agent(self.level, x, y, nx, ny)
@@ -85,7 +85,7 @@ class SokobanEnv(gym.Env):
             elif src.util.is_box_placed(self.level, bx, by):
                 reward = BONUS
         
-        return self.get_observation(), reward, self.game_over, {}
+        return self.get_observation(), reward, self.game_over, False, {}
     
     def render(self):
         if self.root is None:
@@ -169,9 +169,9 @@ class SokobanEnv(gym.Env):
             self.done = False
             self.action_sequence = []
         elif not self.done:
-            state = src.util.serialize_state(self.obs)
+            state = tuple(self.obs)
             action = self.policy.get(state, self.action_space.sample())
-            self.obs, reward, self.done, info = self.step(action)
+            self.obs, reward, self.done, truncated, info = self.step(action)
             self.action_sequence.append(action)
             self.steps += 1
             if self.done:

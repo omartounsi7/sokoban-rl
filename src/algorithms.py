@@ -91,3 +91,4 @@ def has_converged(Q_old, Q_new, threshold):
             diff = abs(Q_old[state][action] - Q_new[state][action])
             max_diff = max(max_diff, diff) 
     return max_diff < threshold
+
