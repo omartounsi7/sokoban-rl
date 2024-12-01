@@ -15,7 +15,10 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.99, epsilon=0.9):
     policy = {}
     action_space = list(ACTION_SPACE.keys())
 
-    for episode in range(num_episodes):
+    episode = 0
+    no_policy_change_ctr = 0
+
+    while no_policy_change_ctr < EARLY_STOPPING_PATIENCE and episode < num_episodes:
         if (episode + 1) % 100 == 0:
             print("Episode " + str(episode + 1) + "/" + str(num_episodes))
         trajectory = []
@@ -48,22 +51,34 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.99, epsilon=0.9):
                 current_state = serialized_obs
 
         episode_length = len(trajectory)
-
+        has_policy_changed = False
+        
         for t in range(episode_length):
             state, action, reward = trajectory[t]
             if state not in Q:
                 Q[state] = {a: 0.0 for a in action_space}
                 returns_sum[state] = {a: 0.0 for a in action_space}
                 returns_count[state] = {a: 0 for a in action_space}
+            
             G = 0
             for k in range(t, episode_length):
                 state_k, action_k, reward_k = trajectory[k]
                 G += gamma ** (k - t) * reward_k
+            
             returns_sum[state][action] += G
             returns_count[state][action] += 1
             Q[state][action] = returns_sum[state][action] / returns_count[state][action]
             best_action = max(Q[state], key=Q[state].get)
+
+            if policy.get(state) is not None and best_action != policy[state]:
+                has_policy_changed = True
             policy[state] = best_action
+
+        episode += 1
+        if not has_policy_changed:
+            no_policy_change_ctr += 1
+        else:
+            no_policy_change_ctr = 0
 
     print("Total number of episodes: " + str(episode + 1))
     print("Monte Carlo policy optimization algorithm completed.")
@@ -71,24 +86,19 @@ def mc_policy_evaluation(env, num_episodes=100000, gamma=0.99, epsilon=0.9):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 2:
         print(
-            "Usage: python montecarlo.py <puzzle_file> <number_of_episodes>"
+            "Usage: python montecarlo.py <puzzle_file>"
         )
         sys.exit(1)
 
-    level_file = sys.argv[1]
-    num_episodes = int(sys.argv[2])
-    env = SokobanEnv(level_file)
+    env = SokobanEnv(sys.argv[1])
 
     start_time = time.time()
     process = psutil.Process(os.getpid())
     before = process.memory_info().rss / 1024 / 1024
 
-    policy = mc_policy_evaluation(
-        env,
-        num_episodes=num_episodes
-    )
+    policy = mc_policy_evaluation(env)
 
     after = process.memory_info().rss / 1024 / 1024
     time_to_train = time.time() - start_time

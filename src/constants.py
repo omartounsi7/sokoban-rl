@@ -18,4 +18,4 @@ ACTION_MAP = {
     3: (1, 0),  # Right
 }
 WAIT_TIME = 500  # in milliseconds
-EARLY_STOPPING_PATIENCE = 1000
+EARLY_STOPPING_PATIENCE = 500
