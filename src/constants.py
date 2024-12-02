@@ -7,7 +7,7 @@ WAIT_TIME = 500  # in milliseconds
 # Rewards
 SUPERMALUS = -10
 MALUS = -1
-STEP_REWARD = 0
+STEP_REWARD = -0.01
 BONUS = 10
 SUPERBONUS = 100
 
