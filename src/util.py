@@ -76,7 +76,7 @@ def is_box_stuck(state, x, y):
     for i in range(4):
         dx1, dy1 = dirs[i]
         dx2, dy2 = dirs[(i + 1) % 4]
-        if is_obstacle(state, x + dx1, y + dy1) and is_obstacle(state, x + dx2, y + dy2):
+        if is_wall(state, x + dx1, y + dy1) and is_wall(state, x + dx2, y + dy2):
             return True
 
     return False
