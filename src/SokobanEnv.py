@@ -56,7 +56,7 @@ class SokobanEnv(gym.Env):
         return obs.flatten()
 
     def step(self, action):
-        dx, dy = ACTIONMAP[action]
+        dx, dy = ACTION_MAP[action]
 
         reward = MALUS
         moved_box = False
@@ -73,7 +73,7 @@ class SokobanEnv(gym.Env):
 
         src.util.move_agent(self.level, x, y, nx, ny)
         self.player_pos = (nx, ny)
-        reward = STEPREWARD
+        reward = STEP_REWARD
 
         if moved_box:
             bx, by = nx + dx, ny + dy
@@ -97,9 +97,9 @@ class SokobanEnv(gym.Env):
         self.canvas.delete("all")
         for y, row in enumerate(self.level):
             for x, char in enumerate(row):
-                x1 = XOFFSET + x * TILESIZE
-                y1 = YOFFSET + y * TILESIZE
-                x2, y2 = x1 + TILESIZE, y1 + TILESIZE
+                x1 = X_OFFSET + x * TILE_SIZE
+                y1 = Y_OFFSET + y * TILE_SIZE
+                x2, y2 = x1 + TILE_SIZE, y1 + TILE_SIZE
                 if char == "#":
                     self.canvas.create_rectangle(x1, y1, x2, y2, fill="gray")
                 elif char == ".":
@@ -183,8 +183,8 @@ class SokobanEnv(gym.Env):
                 elif reward == SUPERMALUS:
                     print("Game lost.")
                 literal_policy = [
-                    ACTIONSPACE[action] for action in self.action_sequence
+                    ACTION_SPACE[action] for action in self.action_sequence
                 ]
                 print("Number of actions: " + str(self.steps))
                 print("Learned policy: " + str(literal_policy))
-        self.root.after(WAITTIME, self.autoplay_step)
+        self.root.after(WAIT_TIME, self.autoplay_step)
