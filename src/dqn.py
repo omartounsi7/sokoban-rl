@@ -115,11 +115,19 @@ class DQNTrainer:
         state = env.reset()
         done = False
         step = 0
+        visited_states = set()
 
         while step < self.total_timesteps:
+            visited_states.add(tuple(state))
             action = self.select_action(state, self.epsilon)
             next_state, reward, done, truncated, info = env.step(action)
-            self.push_transition(state, action, next_state, reward, done)
+
+            if tuple(next_state) in visited_states:
+                done = True
+                self.push_transition(state, action, next_state, SUPERMALUS, done)
+            else:
+                self.push_transition(state, action, next_state, reward, done)
+            
             state = next_state
             step += 1
 
@@ -133,20 +141,34 @@ class DQNTrainer:
 
             if done:
                 state = env.reset()
+                visited_states.clear()
 
             if step % 10000 == 0:
-                print(f"Step {step}/{self.total_timesteps}")
-                # avg_reward = self.evaluate(env)
-                # print(f"Average Reward: {avg_reward:.2f}")
+                avg_reward = self.evaluate(env)
+                print(f"Step: {step}/{self.total_timesteps}")
+                print(f"Reward: {avg_reward:.2f}")
+                if avg_reward > BEST_REWARD_THRESHOLD:
+                    break
 
     def evaluate(self, env):
         total_reward = 0.0
         state = env.reset()
         done = False
+        visited_states = set()
+        visited_states.add(tuple(state))
+
         while not done:
             action = self.select_action(state, eps=0.0)
             state, reward, done, truncated, info = env.step(action)
-            total_reward += reward
+            serialized_state = tuple(state)
+
+            if serialized_state in visited_states:
+                total_reward += SUPERMALUS
+                done = True
+            else:
+                total_reward += reward
+                visited_states.add(serialized_state)
+
         return total_reward
     
     def get_policy(self):

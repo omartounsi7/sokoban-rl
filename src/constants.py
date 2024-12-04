@@ -14,14 +14,14 @@ SUPERBONUS = 100
 # Hyperparameters
 MAX_EPISODES_MC = 100000
 MAX_EPISODES_PG = 1000
-MAX_STEPS_DQN = 100000
+MAX_STEPS_DQN = 1000000
 GAMMA = 0.99
 EPSILON = 0.9
 MIN_EPSILON = 0.1
 EPSILON_DECAY = 0.995
 LEARNING_RATE = 1e-3
 EARLY_STOPPING_PATIENCE = 500 # for monte carlo convergence
-BEST_REWARD_THRESHOLD = SUPERBONUS * 0.8 # for policy gradient convergence
+BEST_REWARD_THRESHOLD = SUPERBONUS * 0.8 # for policy gradient and dqn convergence
 
 # For MDP
 ACTION_SPACE = {0: "up", 1: "left", 2: "down", 3: "right"}
