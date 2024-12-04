@@ -20,7 +20,7 @@ def mc_policy_evaluation(env, num_episodes=MAX_EPISODES_MC, gamma=GAMMA, epsilon
 
     while no_policy_change_ctr < EARLY_STOPPING_PATIENCE and episode < num_episodes:
         if (episode + 1) % 100 == 0:
-            print("Episode " + str(episode + 1) + "/" + str(num_episodes))
+            print("Episode " + str(episode + 1))
         trajectory = []
         terminalState = False
         visited_states = set()
@@ -81,6 +81,7 @@ def mc_policy_evaluation(env, num_episodes=MAX_EPISODES_MC, gamma=GAMMA, epsilon
             no_policy_change_ctr = 0
 
     if episode != num_episodes:
+        print("No policy change for " + str(EARLY_STOPPING_PATIENCE) + " episodes, algorithm has converged.")
         print("Number of episodes to converge: " + str(episode + 1))
     print("Monte Carlo policy optimization algorithm completed.")
     return policy

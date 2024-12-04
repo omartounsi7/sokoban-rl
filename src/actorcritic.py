@@ -104,11 +104,12 @@ def actor_critic_policy_gradient(env, num_episodes=MAX_EPISODES_PG, gamma=GAMMA,
             best_policy = policy.copy()
 
         print(
-            f"Episode {episode + 1}/{num_episodes}, Total Reward: {total_reward:.2f}, Best Reward: {best_reward:.2f}"
+            f"Episode {episode + 1}, Total Reward: {total_reward:.2f}, Best Reward: {best_reward:.2f}"
         )
 
         # Check for convergence
         if best_reward > BEST_REWARD_THRESHOLD:
+            print("Optimal reward reached, algorithm has converged.")
             break
 
     if episode != num_episodes:

@@ -42,8 +42,8 @@ def main():
 
     after = process.memory_info().rss / 1024 / 1024
     time_to_train = time.time() - start_time
-    print(f"Time to train: {time_to_train:.2f}s")
-    print(f"Total memory used: {after - before:.2f} MB")
+    print(f"Execution time: {time_to_train:.2f}s")
+    print(f"Memory use: {after - before:.2f} MB")
 
     env.autoplay(policy)
     env.root.mainloop()

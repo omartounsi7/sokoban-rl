@@ -145,9 +145,10 @@ class DQNTrainer:
 
             if step % 10000 == 0:
                 avg_reward = self.evaluate(env)
-                print(f"Step: {step}/{self.total_timesteps}")
-                print(f"Reward: {avg_reward:.2f}")
+                print(f"Step {step}, Reward: {avg_reward:.2f}, Epsilon: {self.epsilon:.2f}")
                 if avg_reward > BEST_REWARD_THRESHOLD:
+                    print("Optimal reward reached, algorithm has converged.")
+                    print("Number of steps to converge: " + str(step))
                     break
 
     def evaluate(self, env):
