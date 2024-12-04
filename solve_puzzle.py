@@ -6,6 +6,7 @@ from src.SokobanEnv import SokobanEnv
 from src.montecarlo import mc_policy_evaluation
 from src.reinforce import reinforce_policy_gradient
 from src.actorcritic import actor_critic_policy_gradient
+from src.td import td_learning
 
 def main():
     if len(sys.argv) != 3:
@@ -32,6 +33,8 @@ def main():
         policy, rewards = reinforce_policy_gradient(env)
     elif algorithm == "actor_critic":
         policy, rewards = actor_critic_policy_gradient(env)
+    elif algorithm == "td_learning":
+        policy = td_learning(env)
     else:
         print(f"Error: Unknown algorithm '{algorithm}'.")
         print("Available algorithms: monte_carlo, reinforce, actor_critic")
