@@ -65,7 +65,9 @@ class SokobanEnv(gym.Env):
 
         if src.util.is_wall(self.level, nx, ny):
             return self.get_observation(), reward, self.game_over, False, {}
-
+        
+        dist_before = src.util.distance_to_nearest_goal(self.level, nx, ny)
+        
         if src.util.is_box(self.level, nx, ny):
             if not src.util.move_box(self.level, nx, ny, dx, dy):
                 return self.get_observation(), reward, self.game_over, False, {}
@@ -77,6 +79,11 @@ class SokobanEnv(gym.Env):
 
         if moved_box:
             bx, by = nx + dx, ny + dy
+            dist_after = src.util.distance_to_nearest_goal(self.level, bx, by)
+            if dist_after < dist_before:
+                reward += PROGRESS_REWARD  # Reward for moving closer to the goal
+            elif dist_after > dist_before:
+                reward += REGRESSION_PENALTY  # Penalty for moving farther from the goal
             if src.util.is_box_stuck(self.level, bx, by):
                 reward = SUPERMALUS
                 self.game_over = True

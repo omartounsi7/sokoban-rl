@@ -114,6 +114,21 @@ def check_win(state):
             return False
     return True
 
+def distance_to_nearest_goal(level, x, y):
+    from queue import Queue
+
+    goals = [
+        (gy, gx)
+        for gy, row in enumerate(level)
+        for gx, cell in enumerate(row)
+        if cell in [".", "+", "*"]
+    ]
+
+    if not goals:
+        return float("inf")
+
+    return min(abs(gy - y) + abs(gx - x) for gy, gx in goals)
+
 def generate_state_space(initial_level):
     print("Generating state space...")
     state_space = set()
