@@ -12,7 +12,7 @@ from src.td import td_learning
 def main():
     if len(sys.argv) != 3:
         print("Usage: python solve_puzzle.py <puzzle_file> <algorithm>")
-        print("Available algorithms: monte_carlo, reinforce, actor_critic, dqn")
+        print("Available algorithms: monte_carlo, reinforce, actor_critic, dqn, td_learning")
         sys.exit(1)
 
     puzzle_path = sys.argv[1]
