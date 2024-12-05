@@ -35,6 +35,7 @@ def reinforce_policy_gradient(env, num_episodes=MAX_EPISODES_PG, gamma=GAMMA, lr
     policy = {}
     best_policy = {}
     best_reward = float("-inf")
+    explored_states = set()
 
     for episode in range(num_episodes):
         state = env.reset()
@@ -44,9 +45,12 @@ def reinforce_policy_gradient(env, num_episodes=MAX_EPISODES_PG, gamma=GAMMA, lr
         trajectory = []
         visited = set()
 
+        steps = 0
         done = False
-        while not done:
+        while not done and steps < MAX_STEPS_PG:
+            steps += 1
             visited.add(tuple(state))
+            explored_states.add(tuple(state))
             action_probs = policy_net(state_tensor)
             action_dist = torch.distributions.Categorical(action_probs)
             action = action_dist.sample()
@@ -100,6 +104,8 @@ def reinforce_policy_gradient(env, num_episodes=MAX_EPISODES_PG, gamma=GAMMA, lr
         if best_reward > BEST_REWARD_THRESHOLD:
             print("Optimal reward reached, algorithm has converged.")
             break
+
+    print(f"Total number of unique states explored: {len(explored_states)}")
 
     if episode != num_episodes:
         print("Number of episodes to converge: " + str(episode + 1))

@@ -14,9 +14,10 @@ def td_learning(env, num_episodes=MAX_EPISODES_TD, gamma=0.95, epsilon=EPSILON, 
     action_space = list(ACTION_SPACE.keys())
     episode = 0
     no_policy_change_ctr = 0
+    explored_states = set()
 
     while no_policy_change_ctr < EARLY_STOPPING_PATIENCE and episode < num_episodes:
-        if (episode + 1) % 100 == 0:
+        if (episode + 1) % 1000 == 0:
             print("Episode " + str(episode + 1))
 
         current_state = tuple(env.reset())
@@ -26,6 +27,7 @@ def td_learning(env, num_episodes=MAX_EPISODES_TD, gamma=0.95, epsilon=EPSILON, 
 
         while not terminalState:
             visited_states.add(current_state)
+            explored_states.add(current_state)
             epsilon = max(MIN_EPSILON, epsilon * EPSILON_DECAY)
 
             # epsilon-greedy action selection
@@ -70,6 +72,8 @@ def td_learning(env, num_episodes=MAX_EPISODES_TD, gamma=0.95, epsilon=EPSILON, 
             no_policy_change_ctr += 1
         else:
             no_policy_change_ctr = 0
+
+    print(f"Total number of unique states explored: {len(explored_states)}")
 
     if episode != num_episodes:
         print("No policy change for " + str(EARLY_STOPPING_PATIENCE) + " episodes, algorithm has converged.")
