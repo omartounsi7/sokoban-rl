@@ -85,6 +85,8 @@ class SokobanEnv(gym.Env):
                 self.game_over = True
             elif src.util.is_box_placed(self.level, bx, by):
                 reward = BONUS
+            elif src.util.is_box_placed(self.level, nx, ny) and not src.util.is_box_placed(self.level, bx, by):
+                reward = MALUS
         
         return self.get_observation(), reward, self.game_over, False, {}
     

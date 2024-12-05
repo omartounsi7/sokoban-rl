@@ -45,7 +45,9 @@ def reinforce_policy_gradient(env, num_episodes=MAX_EPISODES_PG, gamma=GAMMA, lr
         visited = set()
 
         done = False
-        while not done:
+        steps = 0
+        while not done and steps < MAX_STEP:
+            steps += 1
             visited.add(tuple(state))
             action_probs = policy_net(state_tensor)
             action_dist = torch.distributions.Categorical(action_probs)

@@ -45,7 +45,9 @@ def actor_critic_policy_gradient(env, num_episodes=MAX_EPISODES_PG, gamma=GAMMA,
         visited = set()
 
         done = False
-        while not done:
+        steps = 0
+        while not done and steps < MAX_STEP:
+            steps += 1
             visited.add(tuple(state))
             action_probs = actor_net(state_tensor)
             action_dist = torch.distributions.Categorical(action_probs)
