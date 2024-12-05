@@ -12,7 +12,7 @@ from src.td import td_learning
 def main():
     if len(sys.argv) != 3:
         print("Usage: python solve_puzzle.py <puzzle_file> <algorithm>")
-        print("Available algorithms: monte_carlo, reinforce, actor_critic, dqn, td_learning")
+        print("Available algorithms: monte_carlo, td_learning, reinforce, actor_critic, dqn")
         sys.exit(1)
 
     puzzle_path = sys.argv[1]
@@ -40,7 +40,7 @@ def main():
         policy = td_learning(env)
     else:
         print(f"Error: Unknown algorithm '{algorithm}'.")
-        print("Available algorithms: monte_carlo, reinforce, actor_critic, dqn, td_learning")
+        print("Available algorithms: monte_carlo, td_learning, reinforce, actor_critic, dqn")
         sys.exit(1)
 
     after = process.memory_info().rss / 1024 / 1024
