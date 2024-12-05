@@ -9,8 +9,8 @@ from src.actorcritic import actor_critic_policy_gradient
 from src.dqn import deep_q_learning
 from src.td import td_learning
 
-from src.util import compute_v_and_q_from_policy
-from src.constants import GAMMA, NUMERIC_ACTION_SPACE
+# from src.util import compute_v_and_q_from_policy
+# from src.constants import GAMMA, NUMERIC_ACTION_SPACE
 
 def main():
     if len(sys.argv) != 3:
@@ -27,22 +27,21 @@ def main():
         print(f"Error: Puzzle file '{puzzle_path}' not found.")
         sys.exit(1)
 
+    # if puzzle_path.endswith(".txt"):
+    #     policy_path = puzzle_path.replace(".txt", "_opt_policy.txt")
+    # else:
+    #     print(f"Error: Invalid puzzle file format '{puzzle_path}'. Expected a .txt file.")
+    #     sys.exit(1)
 
-    if puzzle_path.endswith(".txt"):
-        policy_path = puzzle_path.replace(".txt", "_opt_policy.txt")
-    else:
-        print(f"Error: Invalid puzzle file format '{puzzle_path}'. Expected a .txt file.")
-        sys.exit(1)
+    # try:
+    #     with open(policy_path, "r") as policy_file:
+    #         opt_policy = eval(policy_file.read().strip())
+    # except (FileNotFoundError, Exception) as e:
+    #     print(f"Error: Could not process the optimal policy file '{policy_path}': {e}")
+    #     sys.exit(1)
 
-    try:
-        with open(policy_path, "r") as policy_file:
-            opt_policy = eval(policy_file.read().strip())
-    except (FileNotFoundError, Exception) as e:
-        print(f"Error: Could not process the optimal policy file '{policy_path}': {e}")
-        sys.exit(1)
-
-    numeric_opt_policy = [NUMERIC_ACTION_SPACE[action] for action in opt_policy]
-    V_opt, Q_opt = compute_v_and_q_from_policy(env, numeric_opt_policy, GAMMA)
+    # numeric_opt_policy = [NUMERIC_ACTION_SPACE[action] for action in opt_policy]
+    # V_opt, Q_opt = compute_v_and_q_from_policy(env, numeric_opt_policy, GAMMA)
 
     start_time = time.time()
     process = psutil.Process(os.getpid())
