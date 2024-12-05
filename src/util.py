@@ -1,6 +1,17 @@
 import itertools
 from src.constants import *
 
+def has_converged(env, policy, opt_policy):
+    current_state = tuple(env.reset())
+    for opt_action in opt_policy:        
+        if current_state not in policy:
+            return False
+        if policy[current_state] != opt_action:
+            return False
+        next_state, reward, done, truncated, info = env.step(opt_action)
+        if done:
+            break
+    return True
 
 def compute_v_and_q_from_policy(env, policy_actions, gamma):
     # policy_actions should be numeric
