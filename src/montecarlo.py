@@ -20,7 +20,7 @@ def mc_policy_evaluation(env, num_episodes=MAX_EPISODES_MC, gamma=GAMMA, epsilon
     explored_states = set()
 
     while no_policy_change_ctr < EARLY_STOPPING_PATIENCE and episode < num_episodes:
-        if (episode + 1) % 100 == 0:
+        if (episode + 1) % 1000 == 0:
             print("Episode " + str(episode + 1))
         trajectory = []
         terminalState = False

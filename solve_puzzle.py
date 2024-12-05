@@ -25,13 +25,10 @@ def main():
         print(f"Error: Puzzle file '{puzzle_path}' not found.")
         sys.exit(1)
 
-    '''
-    print("Generating state space...")
-    with open(puzzle_path, "r") as file:
-        initial_level = [list(line.rstrip("\n")) for line in file.readlines()]
-    state_space = generate_state_space(initial_level)
-    print(f"Total number of states in the state space: {len(state_space)}")
-    '''
+    # with open(puzzle_path, "r") as file:
+    #     initial_level = [list(line.rstrip("\n")) for line in file.readlines()]
+    # state_space = generate_state_space(initial_level)
+    # print(f"Estimated size of the state space: {len(state_space)}")
     
     start_time = time.time()
     process = psutil.Process(os.getpid())
