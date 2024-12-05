@@ -6,8 +6,10 @@ import psutil
 from src.SokobanEnv import SokobanEnv
 from src.constants import *
 
-
-def td_learning(env, num_episodes=MAX_EPISODES_TD, gamma=0.95, epsilon=EPSILON, alpha=0.01):
+# GAMMA 0.99 -> 0.95
+# ALPHA (LR) 0.001 -> 0.05
+# EARLY STOPPING PATIENCE 500 -> 1000 : this does make convergence slower, but it generates more optimal policy
+def td_learning(env, num_episodes=MAX_EPISODES_TD, gamma=0.95, epsilon=EPSILON, alpha=0.05):
     print("Running Temporal Difference Learning algorithm...")
     Q = {}
     policy = {}
