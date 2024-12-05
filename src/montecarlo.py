@@ -17,6 +17,7 @@ def mc_policy_evaluation(env, num_episodes=MAX_EPISODES_MC, gamma=GAMMA, epsilon
 
     episode = 0
     no_policy_change_ctr = 0
+    explored_states = set()
 
     while no_policy_change_ctr < EARLY_STOPPING_PATIENCE and episode < num_episodes:
         if (episode + 1) % 100 == 0:
@@ -28,6 +29,7 @@ def mc_policy_evaluation(env, num_episodes=MAX_EPISODES_MC, gamma=GAMMA, epsilon
 
         while not terminalState:
             visited_states.add(current_state)
+            explored_states.add(current_state)
             epsilon = max(MIN_EPSILON, epsilon * EPSILON_DECAY)
 
             if random.random() < epsilon:
@@ -80,6 +82,7 @@ def mc_policy_evaluation(env, num_episodes=MAX_EPISODES_MC, gamma=GAMMA, epsilon
         else:
             no_policy_change_ctr = 0
 
+    print(f"Total number of unique states explored: {len(explored_states)}")
     if episode != num_episodes:
         print("No policy change for " + str(EARLY_STOPPING_PATIENCE) + " episodes, algorithm has converged.")
         print("Number of episodes to converge: " + str(episode + 1))

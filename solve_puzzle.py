@@ -8,6 +8,7 @@ from src.reinforce import reinforce_policy_gradient
 from src.actorcritic import actor_critic_policy_gradient
 from src.dqn import deep_q_learning
 from src.td import td_learning
+from src.util import generate_state_space
 
 def main():
     if len(sys.argv) != 3:
@@ -24,6 +25,14 @@ def main():
         print(f"Error: Puzzle file '{puzzle_path}' not found.")
         sys.exit(1)
 
+    '''
+    print("Generating state space...")
+    with open(puzzle_path, "r") as file:
+        initial_level = [list(line.rstrip("\n")) for line in file.readlines()]
+    state_space = generate_state_space(initial_level)
+    print(f"Total number of states in the state space: {len(state_space)}")
+    '''
+    
     start_time = time.time()
     process = psutil.Process(os.getpid())
     before = process.memory_info().rss / 1024 / 1024
