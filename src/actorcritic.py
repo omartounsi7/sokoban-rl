@@ -34,6 +34,7 @@ def actor_critic_policy_gradient(env, num_episodes=MAX_EPISODES_PG, gamma=GAMMA,
     policy = {}
     best_policy = {}
     best_reward = float("-inf")
+    explored_states = set()
 
     for episode in range(num_episodes):
         state = env.reset()
@@ -49,6 +50,7 @@ def actor_critic_policy_gradient(env, num_episodes=MAX_EPISODES_PG, gamma=GAMMA,
         while not done and steps < MAX_STEPS_PG:
             steps += 1
             visited.add(tuple(state))
+            explored_states.add(tuple(state))
             action_probs = actor_net(state_tensor)
             action_dist = torch.distributions.Categorical(action_probs)
             action = action_dist.sample()
@@ -113,6 +115,8 @@ def actor_critic_policy_gradient(env, num_episodes=MAX_EPISODES_PG, gamma=GAMMA,
         if best_reward > BEST_REWARD_THRESHOLD:
             print("Optimal reward reached, algorithm has converged.")
             break
+
+    print(f"Total number of unique states explored: {len(explored_states)}")
 
     if episode != num_episodes:
         print("Number of episodes to converge: " + str(episode + 1))
