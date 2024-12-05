@@ -1,7 +1,31 @@
 import itertools
+import math
 from src.constants import *
 
-def has_converged(env, policy, opt_policy):
+def has_Q_converged_l2(Q, Q_opt, threshold):
+    l2_sum = 0
+    for state, actions in Q_opt.items():
+        if state not in Q:
+            continue
+        for action, q_opt_value in actions.items():
+            if action not in Q[state]:
+                continue
+            l2_sum += (Q[state][action] - q_opt_value) ** 2
+    l2_norm = math.sqrt(l2_sum)
+    return l2_norm <= threshold
+
+def has_Q_converged(Q, Q_opt, threshold):
+    for state, actions in Q_opt.items():
+        if state not in Q:
+            return False
+        for action, q_opt_value in actions.items():
+            if action not in Q[state]:
+                return False
+            if abs(Q[state][action] - q_opt_value) > threshold:
+                return False
+    return True
+
+def has_policy_converged(env, policy, opt_policy):
     current_state = tuple(env.reset())
     for opt_action in opt_policy:        
         if current_state not in policy:
