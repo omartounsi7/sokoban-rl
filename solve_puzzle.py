@@ -24,6 +24,19 @@ def main():
         print(f"Error: Puzzle file '{puzzle_path}' not found.")
         sys.exit(1)
 
+    if puzzle_path.endswith(".txt"):
+        policy_path = puzzle_path.replace(".txt", "_opt_policy.txt")
+    else:
+        print(f"Error: Invalid puzzle file format '{puzzle_path}'. Expected a .txt file.")
+        sys.exit(1)
+
+    try:
+        with open(policy_path, "r") as policy_file:
+            opt_policy = eval(policy_file.read().strip())
+    except (FileNotFoundError, Exception) as e:
+        print(f"Error: Could not process the optimal policy file '{policy_path}': {e}")
+        sys.exit(1)
+
     start_time = time.time()
     process = psutil.Process(os.getpid())
     before = process.memory_info().rss / 1024 / 1024
