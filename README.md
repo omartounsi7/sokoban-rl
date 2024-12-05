@@ -5,6 +5,7 @@ This project applies Reinforcement Learning algorithms to solve Sokoban puzzles.
 - Monte Carlo Policy Optimization (Every Visit)
 - REINFORCE
 - Actor-Critic
+- Vanilla Deep Q-Network
 
 Usage:
 
@@ -12,7 +13,7 @@ Usage:
 python solve_puzzle.py <puzzle_file> <algorithm>
 ```
 
-Algorithms: monte_carlo, reinforce, actor_critic
+Algorithms: monte_carlo, reinforce, actor_critic, dqn
 
 Examples:
 
@@ -26,4 +27,8 @@ python .\solve_puzzle.py .\data\puzzles\level_2.txt reinforce
 
 ```bash
 python .\solve_puzzle.py .\data\puzzles\level_3.txt actor_critic
+```
+
+```bash
+python .\solve_puzzle.py .\data\puzzles\level_4.txt dqn
 ```
