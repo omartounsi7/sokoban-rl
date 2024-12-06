@@ -8,6 +8,7 @@ from src.reinforce import reinforce_policy_gradient
 from src.actorcritic import actor_critic_policy_gradient
 from src.dqn import deep_q_learning
 from src.td import td_learning
+from src.util import generate_state_space
 
 # from src.util import compute_v_and_q_from_policy
 # from src.constants import GAMMA, NUMERIC_ACTION_SPACE
@@ -42,6 +43,11 @@ def main():
 
     # numeric_opt_policy = [NUMERIC_ACTION_SPACE[action] for action in opt_policy]
     # V_opt, Q_opt = compute_v_and_q_from_policy(env, numeric_opt_policy, GAMMA)
+
+    # with open(puzzle_path, "r") as file:
+    #     initial_level = [list(line.rstrip("\n")) for line in file.readlines()]
+    # state_space = generate_state_space(initial_level)
+    # print(f"Estimated size of the state space: {len(state_space)}")
 
     start_time = time.time()
     process = psutil.Process(os.getpid())

@@ -116,9 +116,11 @@ class DQNTrainer:
         done = False
         step = 0
         visited_states = set()
+        explored_states = set()
 
         while step < self.total_timesteps:
             visited_states.add(tuple(state))
+            explored_states.add(tuple(state))
             action = self.select_action(state, self.epsilon)
             next_state, reward, done, truncated, info = env.step(action)
 
@@ -147,6 +149,7 @@ class DQNTrainer:
                 avg_reward = self.evaluate(env)
                 print(f"Step {step}, Reward: {avg_reward:.2f}, Epsilon: {self.epsilon:.2f}")
                 if avg_reward > BEST_REWARD_THRESHOLD:
+                    print(f"Total number of unique states explored: {len(explored_states)}")
                     print("Optimal reward reached, algorithm has converged.")
                     print("Number of steps to converge: " + str(step))
                     break
