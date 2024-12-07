@@ -4,7 +4,7 @@ import time
 import gymnasium as gym
 from stable_baselines3 import PPO, A2C, DQN
 
-from src.constants import ACTION_SPACE, SUPERBONUS, SUPERMALUS
+from src.constants import ACTION_SPACE, SUPERBONUS, SUPERMALUS, WAIT_TIME
 
 TIME_STEPS = 10000
 MAX_ACTIONS = 100
@@ -77,6 +77,7 @@ def sb3_train_model():
 
 def play(env, model):
     print("Playing level according to the learned policy...")
+    print("Note: The reset and stop buttons are not functional.")
     obs, info = env.reset()
     done = False
     steps = 0
@@ -88,12 +89,12 @@ def play(env, model):
         done = terminated or truncated
         env.render()
         steps += 1
-        time.sleep(0.5)
+        time.sleep(WAIT_TIME)
     env.close()
 
     if reward == SUPERBONUS:
         print("Game won!")
-    elif reward == SUPERMALUS:
+    else:
         print("Game lost.")
     
     literal_policy = [ACTION_SPACE[action] for action in action_sequence]
