@@ -1,24 +1,41 @@
 import itertools
+import math
 from src.constants import *
 
-
-def has_converged(Q_old, Q_new, threshold):
-    max_diff = 0 
-    for state in Q_old:
-        if state not in Q_new:
-            continue 
-
-        action_old = max(Q_old[state], key=Q_old[state].get)
-        action_new = max(Q_new[state], key=Q_new[state].get)
-        if action_old != action_new:
-            return False
-        for action in Q_old[state]:
-            if action not in Q_new[state]:
+def has_Q_converged_l2(Q, Q_opt, threshold):
+    l2_sum = 0
+    for state, actions in Q_opt.items():
+        if state not in Q:
+            continue
+        for action, q_opt_value in actions.items():
+            if action not in Q[state]:
                 continue
-            diff = abs(Q_old[state][action] - Q_new[state][action])
-            max_diff = max(max_diff, diff) 
+            l2_sum += (Q[state][action] - q_opt_value) ** 2
+    l2_norm = math.sqrt(l2_sum)
+    return l2_norm <= threshold
 
-    return max_diff < threshold
+def has_Q_converged(Q, Q_opt, threshold):
+    for state, actions in Q_opt.items():
+        if state not in Q:
+            return False
+        for action, q_opt_value in actions.items():
+            if action not in Q[state]:
+                return False
+            if abs(Q[state][action] - q_opt_value) > threshold:
+                return False
+    return True
+
+def has_policy_converged(env, policy, opt_policy):
+    current_state = tuple(env.reset())
+    for opt_action in opt_policy:        
+        if current_state not in policy:
+            return False
+        if policy[current_state] != opt_action:
+            return False
+        next_state, reward, done, truncated, info = env.step(opt_action)
+        if done:
+            break
+    return True
 
 def compute_v_and_q_from_policy(env, policy_actions, gamma):
     # policy_actions should be numeric
