@@ -4,6 +4,8 @@ import time
 import gymnasium as gym
 from stable_baselines3 import PPO, A2C, DQN
 
+from src.constants import ACTION_SPACE, SUPERBONUS, SUPERMALUS
+
 TIME_STEPS = 10000
 MAX_ACTIONS = 100
 
@@ -29,7 +31,7 @@ def sb3_train_model():
     env = gym.make('SokobanEnv-v0')
     env.reset()
 
-    models_dir = "models/" + algorithm + "/" + puzzle_path
+    models_dir = "models/" + algorithm
     log_dir = "logs"
     model_path = f"{models_dir}/latest.zip"
 
@@ -69,24 +71,34 @@ def sb3_train_model():
             model.save(f"{models_dir}/latest")
     
     except KeyboardInterrupt:
-        print("\nTraining interrupted. Model saved.")
+        print("Training interrupted. Model saved.")
         model.save(f"{models_dir}/latest")
         play(env, model)
 
 def play(env, model):
-    print("Starting playback...")
+    print("Playing level according to the learned policy...")
     obs, info = env.reset()
     done = False
     steps = 0
+    action_sequence = []
     while not done and steps < MAX_ACTIONS:
         action, _states = model.predict(obs)
+        action_sequence.append(int(action))
         obs, reward, terminated, truncated, info = env.step(int(action))
         done = terminated or truncated
         env.render()
         steps += 1
         time.sleep(0.5)
     env.close()
-    print("Playback finished.")
+
+    if reward == SUPERBONUS:
+        print("Game won!")
+    elif reward == SUPERMALUS:
+        print("Game lost.")
+    
+    literal_policy = [ACTION_SPACE[action] for action in action_sequence]
+    print("Number of actions: " + str(steps))
+    print("Learned policy: " + str(literal_policy))
 
 
 if __name__ == "__main__":
