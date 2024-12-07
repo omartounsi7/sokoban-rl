@@ -37,7 +37,7 @@ def actor_critic_policy_gradient(env, num_episodes=MAX_EPISODES_PG, gamma=GAMMA,
     explored_states = set()
 
     for episode in range(num_episodes):
-        state = env.reset()
+        state, info = env.reset()
         state_tensor = torch.tensor(state, dtype=torch.float32)
         log_probs = []
         rewards = []

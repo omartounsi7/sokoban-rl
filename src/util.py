@@ -26,7 +26,8 @@ def has_Q_converged(Q, Q_opt, threshold):
     return True
 
 def has_policy_converged(env, policy, opt_policy):
-    current_state = tuple(env.reset())
+    current_state, info = env.reset()
+    current_state = tuple(current_state)
     for opt_action in opt_policy:        
         if current_state not in policy:
             return False
@@ -44,7 +45,7 @@ def compute_v_and_q_from_policy(env, policy_actions, gamma):
     V = {}
     Q = {}
 
-    state = env.reset()
+    state, info = env.reset()
     trajectory = []
 
     for action in policy_actions:

@@ -1,15 +1,12 @@
 from src.constants import *
 import src.util
-import gym
+import gymnasium as gym
 import numpy as np
 import tkinter as tk
 
 
 class SokobanEnv(gym.Env):
-    metadata = {"render.modes": ["human"]}
-
     def __init__(self, level_file):
-        super(SokobanEnv, self).__init__()
         self.level_file = level_file
         self.load_level()
         self.action_space = gym.spaces.Discrete(4)  # 0: Up, 1: Left, 2: Down, 3: Right
@@ -23,7 +20,6 @@ class SokobanEnv(gym.Env):
             "@": 5,  # Player
             "+": 6,  # Player on goal
         }
-        self.reset()
         self.root = None
         self.canvas = None
         self.game_over = False
@@ -41,12 +37,12 @@ class SokobanEnv(gym.Env):
         self.player_pos = src.util.find_player_in_state(self.level)
         self.total_boxes = sum(row.count("$") + row.count("*") for row in self.level)
 
-    def reset(self):
+    def reset(self, seed = None, options = None):
         self.level = [row.copy() for row in self.initial_level]
         self.player_pos = src.util.find_player_in_state(self.level)
         self.game_over = False
         self.steps = 0
-        return self.get_observation()
+        return self.get_observation(), {}
 
     def get_observation(self):
         obs = np.zeros((self.height, self.width), dtype=np.int8)
@@ -156,7 +152,7 @@ class SokobanEnv(gym.Env):
         self.policy = policy
         self.stop_pressed = False
         self.reset_pressed = False
-        self.obs = self.reset()
+        self.obs, info = self.reset()
         self.done = False
         self.action_sequence = []
         self.autoplay_step()
@@ -168,7 +164,7 @@ class SokobanEnv(gym.Env):
             return
         elif self.reset_pressed:
             self.reset_pressed = False
-            self.obs = self.reset()
+            self.obs, info = self.reset()
             self.done = False
             self.action_sequence = []
         elif not self.done:

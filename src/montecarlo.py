@@ -25,7 +25,8 @@ def mc_policy_evaluation(env, num_episodes=MAX_EPISODES_MC, gamma=GAMMA, epsilon
         trajectory = []
         terminalState = False
         visited_states = set()
-        current_state = tuple(env.reset())
+        current_state, info = env.reset()
+        current_state = tuple(current_state)
 
         while not terminalState:
             visited_states.add(current_state)

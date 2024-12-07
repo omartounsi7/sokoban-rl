@@ -112,7 +112,7 @@ class DQNTrainer:
         self.target_net.load_state_dict(self.Q_net.state_dict())
     
     def train(self, env):
-        state = env.reset()
+        state, info = env.reset()
         done = False
         step = 0
         visited_states = set()
@@ -142,7 +142,7 @@ class DQNTrainer:
             self.epsilon = linear_schedule(self.start_epsilon, self.epsilon_min, self.exp_fraction * self.total_timesteps, step)
 
             if done:
-                state = env.reset()
+                state, info = env.reset()
                 visited_states.clear()
 
             if step % 10000 == 0:
@@ -156,7 +156,7 @@ class DQNTrainer:
 
     def evaluate(self, env):
         total_reward = 0.0
-        state = env.reset()
+        state, info = env.reset()
         done = False
         visited_states = set()
         visited_states.add(tuple(state))
