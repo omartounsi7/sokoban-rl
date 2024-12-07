@@ -20,7 +20,8 @@ def td_learning(env, num_episodes=MAX_EPISODES_TD, gamma=0.95, epsilon=EPSILON, 
         if (episode + 1) % 1000 == 0:
             print("Episode " + str(episode + 1))
 
-        current_state = tuple(env.reset())
+        current_state, info = env.reset()
+        current_state = tuple(current_state)
         terminalState = False
         visited_states = set()
         has_policy_changed = False
