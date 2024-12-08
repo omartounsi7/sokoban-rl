@@ -22,7 +22,7 @@ EPSILON = 0.9
 MIN_EPSILON = 0.1
 EPSILON_DECAY = 0.995
 LEARNING_RATE = 1e-3
-EARLY_STOPPING_PATIENCE = 500 # for monte carlo convergence
+EARLY_STOPPING_PATIENCE = 1000 # for monte carlo convergence
 BEST_REWARD_THRESHOLD = SUPERBONUS * 0.8 # for policy gradient and dqn convergence
 
 # For MDP
