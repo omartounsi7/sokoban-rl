@@ -7,7 +7,7 @@ from src.SokobanEnv import SokobanEnv
 from src.constants import *
 
 
-def td_learning(env, num_episodes=MAX_EPISODES_TD, gamma=0.95, epsilon=EPSILON, alpha=0.01):
+def td_learning(env, num_episodes=MAX_EPISODES_TD, gamma=GAMMA, epsilon=EPSILON, alpha=0.01):
     print("Running Temporal Difference Learning algorithm...")
     Q = {}
     policy = {}

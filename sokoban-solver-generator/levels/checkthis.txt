@@ -1,0 +1,6 @@
+# wall -> +
+. goal -> X
+$ box -> @
+* box on goal -> $
+@ player -> *
++ player on goal -> %
