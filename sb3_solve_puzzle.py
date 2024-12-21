@@ -89,7 +89,7 @@ def play(env, model):
         done = terminated or truncated
         env.render()
         steps += 1
-        time.sleep(WAIT_TIME)
+        time.sleep(1)
     env.close()
 
     if reward == SUPERBONUS:
